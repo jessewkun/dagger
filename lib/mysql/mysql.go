@@ -10,7 +10,6 @@ import (
 
 	dlog "dagger/lib/logger"
 
-	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -20,32 +19,18 @@ import (
 
 const TAGNAME = "DAGGER_MYSQL"
 
-type Config struct {
-	Driver      string   `toml:"driver"`
-	Dsn         []string `toml:"dsn"`
-	MaxConn     int      `toml:"max_conn"`      // 最大连接数
-	MaxIdleConn int      `toml:"max_idle_conn"` // 最大空闲连接数
-	ConnMaxLife int      `toml:"conn_max_life"` // 连接最长持续时间， 默认1小时，单位秒
-	IsLog       bool     `toml:"is_log"`        // 是否记录日志  日志级别为info
-}
-
 // connList 数据库连接列表
 var connList map[string]*gorm.DB
+var mysqlCfg map[string]Config
 
 func init() {
 	connList = make(map[string]*gorm.DB)
 }
 
-// InitDb 初始化数据库
-func InitDb() {
-	for dbName := range viper.GetViper().GetStringMap("db") {
-		conf := Config{}
-		dbIns := fmt.Sprintf("db.%s", dbName)
-		if err := viper.GetViper().UnmarshalKey(dbIns, &conf); err != nil {
-			dlog.ErrorWithMsg(context.Background(), TAGNAME, "Unmarshal mysql config error, db %s error %s", dbName, err)
-			continue
-		}
-
+// InitMysql 初始化数据库
+func InitMysql(cfg map[string]Config) {
+	mysqlCfg = cfg
+	for dbName, conf := range cfg {
 		conn, err := dbConnect(dbName, conf)
 		if err != nil {
 			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s error %s", dbName, err)
@@ -153,17 +138,10 @@ func GetConn(dbIns string) *gorm.DB {
 
 // 数据库探活
 func Active() {
-	for row := range viper.GetViper().GetStringMap("db") {
-		conf := Config{}
-		dbIns := fmt.Sprintf("db.%s", row)
-		if err := viper.GetViper().UnmarshalKey(dbIns, &conf); err != nil {
-			dlog.ErrorWithMsg(context.Background(), TAGNAME, "Unmarshal mysql config error, db %s error %s", row, err)
-			continue
-		}
-
-		_, err := dbConnect(row, conf)
+	for dbName, conf := range mysqlCfg {
+		_, err := dbConnect(dbName, conf)
 		if err != nil {
-			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s error %s", row, err)
+			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s error %s", dbName, err)
 			continue
 		}
 	}

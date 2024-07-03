@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"dagger/lib/logger"
-	"fmt"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -15,30 +13,6 @@ import (
 )
 
 const TAGNAME = "DAGGER_HTTP"
-
-// HttpClient
-type HttpClient struct {
-	Client     *resty.Client
-	Timeout    time.Duration
-	RetryCount int
-	debug      bool
-}
-
-func (h *HttpClient) String() string {
-	return fmt.Sprintf("Client: %p, Timeout: %s, RetryCount: %d, debug: %v", h.Client, h.Timeout, h.RetryCount, h.debug)
-}
-
-// HttpResponse
-type HttpResponse struct {
-	Body       []byte
-	Header     http.Header
-	StatusCode int
-	TraceInfo  resty.TraceInfo
-}
-
-func (h *HttpResponse) String() string {
-	return fmt.Sprintf("Body: %s, Header: %v, StatusCode: %d, TraceInfo: %+v", h.Body, h.Header, h.StatusCode, h.TraceInfo)
-}
 
 // NewHttpClient create a new http client
 func NewHttpClient(t time.Duration, retryCount int) *HttpClient {

@@ -24,24 +24,24 @@ func init() {
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("viper ReadInConfig %s error: %s\n", configFile, err))
 	}
-
-	if err := viper.Unmarshal(&common.DaggerCfg); err != nil {
+	if err := viper.Unmarshal(&common.Cfg); err != nil {
 		panic(fmt.Errorf("viper Unmarshal %s error: %s\n", configFile, err))
 	}
 	// 监控配置文件是否变化
+	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		fmt.Printf("Config file changed: %s\n", e.Name)
 	})
-	viper.WatchConfig()
 
-	logger.InitLogger()
-	mysql.InitDb()
+	logger.InitLogger(common.Cfg.Log)
+	mysql.InitMysql(common.Cfg.Mysql)
+	// redis.InitRedis(common.Cfg.Redis)
 }
 
 func main() {
-	gin.SetMode(common.DaggerCfg.Mode)
+	gin.SetMode(common.Cfg.Mode)
 	r := gin.Default()
 
 	router.Setup(r)
-	r.Run(common.DaggerCfg.Port)
+	r.Run(common.Cfg.Port)
 }

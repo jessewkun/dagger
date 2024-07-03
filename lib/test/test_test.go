@@ -24,12 +24,12 @@ func TestMain(m *testing.M) {
 		panic(fmt.Errorf("viper ReadInConfig %s error: %s\n", configFile, err))
 	}
 
-	if err := viper.Unmarshal(&common.DaggerCfg); err != nil {
+	if err := viper.Unmarshal(&common.Cfg); err != nil {
 		panic(fmt.Errorf("viper Unmarshal %s error: %s\n", configFile, err))
 	}
 
-	logger.InitLogger()
-	mysql.InitDb()
+	logger.InitLogger(common.Cfg.Log)
+	mysql.InitMysql(common.Cfg.Mysql)
 
 	m.Run()
 }

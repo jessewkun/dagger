@@ -9,7 +9,6 @@ require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/google/uuid v1.6.0
-	github.com/jinzhu/configor v1.2.2
 	github.com/json-iterator/go v1.1.12
 	github.com/spf13/cast v1.6.0
 	github.com/spf13/viper v1.19.0
@@ -22,7 +21,6 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v1.2.0 // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect
 	github.com/bytedance/sonic/loader v0.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect

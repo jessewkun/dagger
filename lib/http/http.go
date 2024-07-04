@@ -16,23 +16,35 @@ const TAGNAME = "DAGGER_HTTP"
 
 // NewHttpClient create a new http client
 func NewHttpClient(t time.Duration, retryCount int) *HttpClient {
-	return &HttpClient{
+	h := &HttpClient{
 		Client:     resty.New().SetTimeout(t),
 		Timeout:    t,
 		RetryCount: retryCount,
 	}
+	return h.setRetryCount().setTimeOut()
 }
 
-// setTimeOut
-func (h *HttpClient) SetTimeOut(t time.Duration) *HttpClient {
-	h.Client.SetTimeout(t)
+// SetTimeOut
+func (h *HttpClient) setTimeOut() *HttpClient {
+	h.Client.SetTimeout(h.Timeout)
 	return h
 }
 
-// setDebug
-func (h *HttpClient) SetDebug(debug bool) *HttpClient {
-	h.debug = debug
+// setRetryCount
+func (h *HttpClient) setRetryCount() *HttpClient {
+	h.Client.SetRetryCount(h.RetryCount)
 	return h
+}
+
+// SetIsTraceLog
+func (h *HttpClient) SetIsTraceLog(isTraceLog bool) *HttpClient {
+	h.isTraceLog = isTraceLog
+	return h
+}
+
+// isLogTraceInfo
+func (h *HttpClient) isTraceInfo() bool {
+	return viper.GetBool("http.is_trace_log") || h.isTraceLog
 }
 
 // setHeader
@@ -52,11 +64,6 @@ func (h *HttpClient) setHeader(c context.Context, headers map[string]string) *Ht
 	return h
 }
 
-// isLogTraceInfo
-func (h *HttpClient) isLogTraceInfo() bool {
-	return viper.GetBool("http.debug") || h.debug
-}
-
 // Post
 func (h *HttpClient) Post(c context.Context, rawURL string, data interface{}, headers map[string]string) (respData *HttpResponse, err error) {
 	h.setHeader(c, headers)
@@ -71,7 +78,7 @@ func (h *HttpClient) Post(c context.Context, rawURL string, data interface{}, he
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
+	if h.isTraceInfo() {
 		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, data: %s, headers: %s, respData: %+v", h, rawURL, data, headers, respData)
 	}
 	return respData, nil
@@ -92,7 +99,7 @@ func (h *HttpClient) Upload(c context.Context, rawURL string, fileBytes []byte, 
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
+	if h.isTraceInfo() {
 		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, param: %s, fileName: %s, data: %s, headers: %s, respData: %+v", h, rawURL, param, fileName, data, headers, respData)
 	}
 	return respData, nil
@@ -112,7 +119,7 @@ func (h *HttpClient) UploadWithFilePath(c context.Context, rawURL string, filePa
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
+	if h.isTraceInfo() {
 		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, filePath: %s, fileName: %s, data: %s, headers: %s, respData: %+v", h, rawURL, filePath, fileName, data, headers, respData)
 	}
 	return respData, nil
@@ -131,7 +138,7 @@ func (h *HttpClient) Download(c context.Context, rawURL string, filePath string,
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
+	if h.isTraceInfo() {
 		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, filePath: %s, headers: %s, respData: %+v", h, rawURL, filePath, headers, respData)
 	}
 	return
@@ -151,7 +158,7 @@ func (h *HttpClient) Get(c context.Context, rawURL string, headers map[string]st
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
+	if h.isTraceInfo() {
 		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, headers: %s, respData: %+v", h, rawURL, headers, respData)
 	}
 	return respData, nil
@@ -171,7 +178,7 @@ func (h *HttpClient) GetWithQueryMap(c context.Context, rawURL string, query map
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
+	if h.isTraceInfo() {
 		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, query: %s, headers: %s, respData: %+v", h, rawURL, query, headers, respData)
 	}
 	return respData, nil
@@ -191,7 +198,7 @@ func (h *HttpClient) GetWithQueryString(c context.Context, rawURL string, query 
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
+	if h.isTraceInfo() {
 		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, query: %s, headers: %s, respData: %+v", h, rawURL, query, headers, respData)
 	}
 	return respData, nil

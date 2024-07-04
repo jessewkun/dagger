@@ -28,6 +28,7 @@ func init() {
 		panic(fmt.Errorf("viper Unmarshal %s error: %s\n", configFile, err))
 	}
 	// 监控配置文件是否变化
+	// TODO 部分配置变化后重置对应的配置
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		fmt.Printf("Config file changed: %s\n", e.Name)
@@ -42,6 +43,6 @@ func main() {
 	gin.SetMode(common.Cfg.Mode)
 	r := gin.Default()
 
-	router.Setup(r)
+	router.InitRouter(r)
 	r.Run(common.Cfg.Port)
 }

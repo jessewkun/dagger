@@ -11,13 +11,13 @@ import (
 // HttpClient
 type HttpClient struct {
 	Client     *resty.Client // resty client
-	Timeout    time.Duration // timeout
-	RetryCount int           // retry count
-	debug      bool          // debug
+	Timeout    time.Duration `toml:"timeout"`      // 超时时间
+	RetryCount int           `toml:"retry_count"`  // 重试次数
+	isTraceLog bool          `toml:"is_trace_log"` // 是否记录trace log
 }
 
 func (h *HttpClient) String() string {
-	return fmt.Sprintf("Client: %p, Timeout: %s, RetryCount: %d, debug: %v", h.Client, h.Timeout, h.RetryCount, h.debug)
+	return fmt.Sprintf("Client: %p, Timeout: %s, RetryCount: %d, isTraceLog: %v", h.Client, h.Timeout, h.RetryCount, h.isTraceLog)
 }
 
 // HttpResponse
@@ -33,5 +33,6 @@ func (h *HttpResponse) String() string {
 }
 
 type Config struct {
-	TransparentParameter []string `toml:"transparent_parameter"` // 透传参数，继承上下文中的参数
+	TransparentParameter []string `toml:"transparent_parameter" mapstructure:"transparent_parameter"` // 透传参数，继承上下文中的参数
+	isTraceLog           bool     `toml:"is_trace_log" mapstructure:"is_trace_log"`                   // 是否记录trace log
 }

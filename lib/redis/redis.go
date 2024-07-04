@@ -72,14 +72,19 @@ func GetConn(dbIns string) *redis.Client {
 	return connList[dbIns][randomKey]
 }
 
-// 探活服务
-func Active() {
+// redis health check
+func HealthCheck() map[string]map[string]string {
+	resp := make(map[string]map[string]string)
 	for dbName, conns := range connList {
+		resp[dbName] = make(map[string]string)
 		for node, conn := range conns {
 			if _, err := conn.Ping(context.Background()).Result(); err != nil {
 				dlog.ErrorWithMsg(context.Background(), TAGNAME, "redis ping db %s node %s error %s", dbName, node, err)
+				resp[dbName][node] = err.Error()
+			} else {
+				resp[dbName][node] = "succ"
 			}
-
 		}
 	}
+	return resp
 }

@@ -1,6 +1,9 @@
 package utils
 
-import "net"
+import (
+	"fmt"
+	"net"
+)
 
 // 是否禁止ip
 func IsBan(clientIP string, whiteList []string) bool {
@@ -27,4 +30,22 @@ func IsBan(clientIP string, whiteList []string) bool {
 	}
 
 	return true
+}
+
+// 获取本地ip
+func GetLocalIP() (string, error) {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "", err
+	}
+
+	for _, addr := range addrs {
+		// 检查 IP 地址类型并跳过回环地址
+		if ipNet, ok := addr.(*net.IPNet); ok && !ipNet.IP.IsLoopback() {
+			if ipNet.IP.To4() != nil {
+				return ipNet.IP.String(), nil
+			}
+		}
+	}
+	return "", fmt.Errorf("no IP address found")
 }

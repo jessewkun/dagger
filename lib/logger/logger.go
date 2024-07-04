@@ -2,12 +2,12 @@ package logger
 
 import (
 	"context"
+	"dagger/utils"
 	"fmt"
 	"os"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
-	"github.com/spf13/cast"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -62,22 +62,17 @@ func initCore() zapcore.Core {
 // formatField 格式化字段
 func formatField(c context.Context, tag string) []zapcore.Field {
 	fields := make([]zapcore.Field, 0)
-
-	if tag != "" {
-		fields = append(fields, zap.String("tag", tag))
-	}
+	fields = append(fields, zap.String("tag", tag))
 
 	hostname, _ := os.Hostname()
 	fields = append(fields, zap.String("host", hostname))
+	ip, _ := utils.GetLocalIP()
+	fields = append(fields, zap.String("ip", ip))
 
 	if len(logcfg.TransparentParameter) > 0 {
 		for _, v := range logcfg.TransparentParameter {
 			if value := c.Value(v); value != nil {
-				if valueInt, ok := value.(int); ok {
-					fields = append(fields, zap.Int(v, valueInt))
-				} else {
-					fields = append(fields, zap.String(v, cast.ToString(value)))
-				}
+				fields = append(fields, zap.Any(v, value))
 			}
 		}
 	}
@@ -98,6 +93,15 @@ func Info(c context.Context, tag string, template interface{}, args ...interface
 	}
 
 	fields := formatField(c, tag)
+	logzap.Info(msg, fields...)
+}
+
+// InfoWithField log
+func InfoWithField(c context.Context, tag string, msg string, field map[string]interface{}) {
+	fields := formatField(c, tag)
+	for k, v := range field {
+		fields = append(fields, zap.Any(k, v))
+	}
 	logzap.Info(msg, fields...)
 }
 

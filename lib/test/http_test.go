@@ -42,7 +42,7 @@ func TestHttpClient_Post(t *testing.T) {
 				Timeout:    tt.fields.Timeout,
 				RetryCount: tt.fields.RetryCount,
 			}
-			h.SetDebug(true)
+			h.SetIsTraceLog(true)
 			_, err := h.Post(tt.args.c, tt.args.rawURL, tt.args.data, tt.args.headers)
 			if err != nil {
 				t.Errorf("HttpClient.Post() error = %v", err)

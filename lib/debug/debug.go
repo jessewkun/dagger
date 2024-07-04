@@ -35,7 +35,7 @@ func IsDebug(flag string) bool {
 
 // hookPrint 输出debug信息
 func hookPrint(c context.Context, format string, v ...interface{}) {
-	if viper.GetString("debug.way") == "log" {
+	if viper.GetString("debug.mode") == "log" {
 		logger.Debug(c, TAGNAME, format, v)
 	} else {
 		fmt.Sprintln(">>> "+format, v)

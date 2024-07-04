@@ -72,54 +72,51 @@ func dbConnect(dbName string, conf Config) (*gorm.DB, error) {
 	var err error
 	master := conf.Dsn[0]
 
-	switch conf.Driver {
-	case "mysql":
-		slave := conf.Dsn[1:]
-		dbOne, err = gorm.Open(mysql.Open(master), &gorm.Config{
-			NamingStrategy: schema.NamingStrategy{SingularTable: true}, // 表前缀
-			Logger:         newLogger,
-		})
+	slave := conf.Dsn[1:]
+	dbOne, err = gorm.Open(mysql.Open(master), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{SingularTable: true}, // 表前缀
+		Logger:         newLogger,
+	})
 
-		if err != nil {
-			return nil, err
-		}
-
-		// 配置读写分离
-		dbResolverCfg := dbresolver.Config{
-			Sources:  []gorm.Dialector{mysql.Open(master)},
-			Replicas: []gorm.Dialector{},
-			Policy:   dbresolver.RandomPolicy{},
-		}
-
-		// 设置从库
-		if len(slave) > 0 {
-			var replicas []gorm.Dialector
-			for i := 0; i < len(slave); i++ {
-				replicas = append(replicas, mysql.Open(slave[i]))
-			}
-			dbResolverCfg.Replicas = replicas
-		}
-
-		if conf.MaxIdleConn == 0 {
-			conf.MaxIdleConn = 25
-		}
-
-		if conf.MaxConn == 0 {
-			conf.MaxConn = 50
-		}
-
-		if conf.ConnMaxLife == 0 {
-			conf.ConnMaxLife = 3600
-		}
-
-		dbOne.Use(
-			dbresolver.Register(dbResolverCfg).
-				// SetConnMaxIdleTime(time.Hour).
-				SetConnMaxLifetime(time.Duration(conf.ConnMaxLife) * time.Second).
-				SetMaxIdleConns(conf.MaxIdleConn).
-				SetMaxOpenConns(conf.MaxConn),
-		)
+	if err != nil {
+		return nil, err
 	}
+
+	// 配置读写分离
+	dbResolverCfg := dbresolver.Config{
+		Sources:  []gorm.Dialector{mysql.Open(master)},
+		Replicas: []gorm.Dialector{},
+		Policy:   dbresolver.RandomPolicy{},
+	}
+
+	// 设置从库
+	if len(slave) > 0 {
+		var replicas []gorm.Dialector
+		for i := 0; i < len(slave); i++ {
+			replicas = append(replicas, mysql.Open(slave[i]))
+		}
+		dbResolverCfg.Replicas = replicas
+	}
+
+	if conf.MaxIdleConn == 0 {
+		conf.MaxIdleConn = 25
+	}
+
+	if conf.MaxConn == 0 {
+		conf.MaxConn = 50
+	}
+
+	if conf.ConnMaxLife == 0 {
+		conf.ConnMaxLife = 3600
+	}
+
+	dbOne.Use(
+		dbresolver.Register(dbResolverCfg).
+			// SetConnMaxIdleTime(time.Hour).
+			SetConnMaxLifetime(time.Duration(conf.ConnMaxLife) * time.Second).
+			SetMaxIdleConns(conf.MaxIdleConn).
+			SetMaxOpenConns(conf.MaxConn),
+	)
 
 	return dbOne, nil
 }
@@ -136,13 +133,17 @@ func GetConn(dbIns string) *gorm.DB {
 	return connList[dbIns]
 }
 
-// 数据库探活
-func Active() {
+// mysql health check
+func HealthCheck() map[string]string {
+	resp := make(map[string]string)
 	for dbName, conf := range mysqlCfg {
 		_, err := dbConnect(dbName, conf)
 		if err != nil {
 			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s error %s", dbName, err)
-			continue
+			resp[dbName] = err.Error()
+		} else {
+			resp[dbName] = "succ"
 		}
 	}
+	return resp
 }

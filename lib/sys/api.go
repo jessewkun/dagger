@@ -1,60 +1,54 @@
 package sys
 
 import (
-	"encoding/json"
+	"dagger/lib/constant"
 	"errors"
+
+	"github.com/gin-gonic/gin"
 )
 
-type ApiResult struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
-}
-
-func (r *ApiResult) String() string {
-	s, _ := json.Marshal(r)
-	return string(s)
-}
-
 // NewApiResult create a new api result
-func NewApiResult(code int, msg string, data interface{}) *ApiResult {
-	return &ApiResult{
-		Code: code,
-		Msg:  msg,
-		Data: data,
+func NewApiResult(c *gin.Context, code int, msg string, data interface{}) *ApiResult {
+	resp := &ApiResult{
+		Code:    code,
+		Msg:     msg,
+		Data:    data,
+		TraceId: c.GetString("trace_id"),
 	}
+	c.Set(constant.DAGGER_OUTPUT, resp.String())
+	return resp
 }
 
 // SuccResp success response
-func SuccResp(data interface{}) *ApiResult {
-	return NewApiResult(0, "succ", data)
+func SuccResp(c *gin.Context, data interface{}) *ApiResult {
+	return NewApiResult(c, 0, "succ", data)
 }
 
 // ErrorResp error response
-func ErrorResp(err error) *ApiResult {
+func ErrorResp(c *gin.Context, err error) *ApiResult {
 	if !errors.As(err, &DaggerError{}) {
 		err = newDefaultError(err)
 	}
 	e := err.(DaggerError)
-	return NewApiResult(e.code, e.Error(), struct{}{})
+	return NewApiResult(c, e.code, e.Error(), struct{}{})
 }
 
 // SystemErrorResp system error response
-func SystemErrorResp() *ApiResult {
-	return ErrorResp(SystemError)
+func SystemErrorResp(c *gin.Context) *ApiResult {
+	return ErrorResp(c, SystemError)
 }
 
 // ParamErrorResp param error response
-func ParamErrorResp() *ApiResult {
-	return ErrorResp(ParamError)
+func ParamErrorResp(c *gin.Context) *ApiResult {
+	return ErrorResp(c, ParamError)
 }
 
 // ForbiddenErrorResp forbidden error response
-func ForbiddenErrorResp() *ApiResult {
-	return ErrorResp(ForbiddenError)
+func ForbiddenErrorResp(c *gin.Context) *ApiResult {
+	return ErrorResp(c, ForbiddenError)
 }
 
 // NotfoundErrorResp not found error response
-func NotfoundErrorResp() *ApiResult {
-	return ErrorResp(NotfoundError)
+func NotfoundErrorResp(c *gin.Context) *ApiResult {
+	return ErrorResp(c, NotfoundError)
 }

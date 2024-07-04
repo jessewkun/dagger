@@ -20,7 +20,7 @@ port = ":8000"
 [mysql]
     [mysql.main]
         dsn = [
-            "root:@tcp(127.0.0.1:3306)/dbname?charset=utf8&parseTime=True&loc=Local",
+            "root:root@tcp(127.0.0.1:3306)/test?charset=utf8&parseTime=True&loc=Local",
         ]
         max_conn = 50           # 最大连接数
         max_idle_conn = 25      # 最大空闲连接数

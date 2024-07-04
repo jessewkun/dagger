@@ -27,7 +27,7 @@ func (ac *AesCbc) Encode(data string) (string, error) {
 	_key := []byte(ac.Key)
 	_iv := []byte(ac.Iv)
 
-	_data = ac.PKCS7Padding(_data)
+	_data = ac.pKCS7Padding(_data)
 	block, err := aes.NewCipher(_key)
 	if err != nil {
 		return "", err
@@ -52,18 +52,18 @@ func (ac *AesCbc) Decode(data string) (string, error) {
 	}
 	mode := cipher.NewCBCDecrypter(block, _iv)
 	mode.CryptBlocks(_data, _data)
-	_data = ac.PKCS7UnPadding(_data)
+	_data = ac.pKCS7UnPadding(_data)
 
 	return string(_data), nil
 }
 
-func (ac *AesCbc) PKCS7Padding(data []byte) []byte {
+func (ac *AesCbc) pKCS7Padding(data []byte) []byte {
 	padding := aes.BlockSize - len(data)%aes.BlockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(data, padtext...)
 }
 
-func (ac *AesCbc) PKCS7UnPadding(data []byte) []byte {
+func (ac *AesCbc) pKCS7UnPadding(data []byte) []byte {
 	length := len(data)
 	unpadding := int(data[length-1])
 	return data[:(length - unpadding)]

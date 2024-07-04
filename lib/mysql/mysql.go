@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -33,7 +32,7 @@ func InitMysql(cfg map[string]Config) {
 	for dbName, conf := range cfg {
 		conn, err := dbConnect(dbName, conf)
 		if err != nil {
-			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s error %s", dbName, err)
+			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s faild, error: %s", dbName, err)
 			continue
 		}
 		connList[dbName] = conn
@@ -50,7 +49,7 @@ func dbConnect(dbName string, conf Config) (*gorm.DB, error) {
 	}
 
 	if len(conf.Dsn) < 1 {
-		return nil, errors.New(fmt.Sprintf("%s db dsn is empty", dbName))
+		return nil, fmt.Errorf("%s db dsn is empty", dbName)
 	}
 
 	logLevel := logger.Silent
@@ -139,7 +138,7 @@ func HealthCheck() map[string]string {
 	for dbName, conf := range mysqlCfg {
 		_, err := dbConnect(dbName, conf)
 		if err != nil {
-			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s error %s", dbName, err)
+			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s faild, error: %s", dbName, err)
 			resp[dbName] = err.Error()
 		} else {
 			resp[dbName] = "succ"

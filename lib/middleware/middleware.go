@@ -14,8 +14,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const TAGNAME = "middleware"
-
 // 检查登录态
 func CheckLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -69,7 +67,7 @@ func IOLog() gin.HandlerFunc {
 		if c.Request.Method == http.MethodPost {
 			bodyByte, _ = io.ReadAll(c.Request.Body)
 		}
-		logger.InfoWithField(c.Request.Context(), TAGNAME, "iolog", map[string]interface{}{
+		logger.InfoWithField(c.Request.Context(), "iolog", "", map[string]interface{}{
 			"duration":        time.Since(t),
 			"request_uri":     c.Request.RequestURI,
 			"method":          c.Request.Method,
@@ -77,7 +75,7 @@ func IOLog() gin.HandlerFunc {
 			"remote_ip":       c.ClientIP(),
 			"user_agent":      c.Request.UserAgent(),
 			"status":          c.Writer.Status(),
-			"response":        c.GetString(constant.DAGGER_OUTPUT),
+			"response":        c.GetString(constant.CTX_DAGGER_OUTPUT),
 			"response_length": c.Writer.Size(),
 			"body":            string(bodyByte),
 		})

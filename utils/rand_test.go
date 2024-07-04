@@ -1,6 +1,9 @@
 package utils
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
 func Test_RandomNum(t *testing.T) {
 	type args struct {
@@ -20,6 +23,32 @@ func Test_RandomNum(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := RandomNum(tt.args.min, tt.args.max)
 			t.Logf("got: %d", got)
+		})
+	}
+}
+
+func TestRandomElement(t *testing.T) {
+	type args struct {
+		m map[string]interface{}
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want  string
+		want1 interface{}
+	}{
+		// TODO: Add test cases.
+		{"test1", args{map[string]interface{}{"a": 1}}, "a", 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, got1 := RandomElement(tt.args.m)
+			if got != tt.want {
+				t.Errorf("RandomElement() got = %v, want %v", got, tt.want)
+			}
+			if !reflect.DeepEqual(got1, tt.want1) {
+				t.Errorf("RandomElement() got1 = %v, want %v", got1, tt.want1)
+			}
 		})
 	}
 }

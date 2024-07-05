@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
 	"dagger/common"
 	"dagger/lib/logger"
 	"dagger/lib/mysql"
 	"dagger/router"
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
@@ -45,6 +51,32 @@ func main() {
 	gin.SetMode(common.Cfg.Mode)
 	r := gin.Default()
 
-	router.InitRouter(r)
-	r.Run(common.Cfg.Port)
+	srv := &http.Server{
+		Addr:    common.Cfg.Port,
+		Handler: router.InitRouter(r),
+	}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			panic(fmt.Errorf("Server startup failed: %v", err))
+		}
+	}()
+
+	gracefulExit(srv)
+}
+
+// gracefulExit 优雅退出
+func gracefulExit(srv *http.Server) {
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-exit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	logger.Info(ctx, "main", "Received signal: %v. Shutting down server...", sig)
+
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.ErrorWithMsg(ctx, "main", "Server shutdown failed: %v", err)
+	}
+	logger.Info(ctx, "main", "Server gracefully shutdown")
+	fmt.Println("Server gracefully shutdown")
 }

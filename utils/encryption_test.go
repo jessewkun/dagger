@@ -13,7 +13,6 @@ func TestMd5X(t *testing.T) {
 		args args
 		want string
 	}{
-		// TODO: Add test cases.
 		{"TestMd5X", args{"123"}, "202cb962ac59075b964b07152d234b70"},
 	}
 	for _, tt := range tests {
@@ -78,7 +77,6 @@ func TestAesCbc_Decode(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{"TestAesCbc_Decode1", fields{"1234567890123456", "1234567890123456"}, args{"9Hnvri1B0jIn9h5nX87ZXA=="}, "abc", false},
 	}
 	for _, tt := range tests {

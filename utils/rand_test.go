@@ -15,7 +15,6 @@ func Test_RandomNum(t *testing.T) {
 		args args
 		want int
 	}{
-		// TODO: Add test cases.
 		{"test1", args{1, 10}, 5},
 		{"test1", args{0, 0}, 5},
 	}
@@ -37,7 +36,6 @@ func TestRandomElement(t *testing.T) {
 		want  string
 		want1 interface{}
 	}{
-		// TODO: Add test cases.
 		{"test1", args{map[string]interface{}{"a": 1}}, "a", 1},
 	}
 	for _, tt := range tests {

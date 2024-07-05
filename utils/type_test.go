@@ -13,7 +13,6 @@ func TestIsOnlyChinese(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
 		{"TestIsOnlyChinese", args{"中文"}, true},
 		{"TestIsNotOnlyChinese", args{"中文1"}, false},
 		{"TestIsNotOnlyChinese", args{"中文a"}, false},
@@ -38,7 +37,6 @@ func TestIsOnlyNumber(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
 		{"TestIsOnlyNumber", args{"123"}, true},
 		{"TestIsOnlyNumber", args{"a123"}, false},
 		{"TestIsOnlyNumber", args{""}, false},
@@ -62,7 +60,6 @@ func TestIsZeroValue(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
 		{"TestIsZeroValue", args{0}, true},
 		{"TestIsZeroValue1", args{1}, false},
 		{"TestIsZeroValuefalse", args{false}, true},

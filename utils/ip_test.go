@@ -14,7 +14,6 @@ func TestIsBan(t *testing.T) {
 		args args
 		want bool
 	}{
-		// TODO: Add test cases.
 		{"TestIsBan", args{"11.1.1.1", []string{"11.1.1.1"}}, false},
 		{"TestIsNotBan", args{"11.1.1.2", []string{"11.1.1.1"}}, true},
 	}
@@ -33,7 +32,6 @@ func TestGetLocalIP(t *testing.T) {
 		want    string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
 		{"TestGetLocalIP", "", false},
 	}
 	for _, tt := range tests {

@@ -25,11 +25,13 @@ func init() {
 	if err := viper.ReadInConfig(); err != nil {
 		panic(fmt.Errorf("viper ReadInConfig %s error: %s\n", configFile, err))
 	}
-
 	if err := viper.Unmarshal(&common.Cfg); err != nil {
 		panic(fmt.Errorf("viper Unmarshal %s error: %s\n", configFile, err))
 	}
 	// 监控配置文件是否变化
+	// viper 会自动监控配置文件的变化，当配置文件发生变化时，viper 会自动更新配置信息
+	// 但是 viper 不会自动更新结构体，所以需要手动更新结构体
+	// 这里只是为了 debug config 可以被动态更新，其他情况下不建议使用
 	viper.WatchConfig()
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		fmt.Printf("Config file changed: %s\n", e.Name)

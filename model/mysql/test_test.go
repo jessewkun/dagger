@@ -26,7 +26,6 @@ func TestTest_AddTest(t *testing.T) {
 		wantId  int
 		wantErr error
 	}{
-		// TODO: Add test cases.
 		{"add",
 			fields{
 				Name:       "test",

@@ -25,7 +25,6 @@ func TestHttpClient_Post(t *testing.T) {
 		wantRespData dhttp.HttpResponse
 		wantStaus    int
 	}{
-		// TODO: Add test cases.
 		{"Test200", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.PostRequest{URL: "https://www.baidu.com", Data: nil, Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 200}, 200},
 		{"Test404", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.PostRequest{URL: "https://www.baidu.com", Data: nil, Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 404}, 404},
 	}
@@ -62,7 +61,6 @@ func TestHttpClient_Get(t *testing.T) {
 		wantRespData dhttp.HttpResponse
 		wantStaus    int
 	}{
-		// TODO: Add test cases.
 		{"Test200", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetRequest{URL: "https://www.baidu.com", Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 200}, 200},
 		{"Test404", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetRequest{URL: "https://www.baidu.com", Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 404}, 404},
 	}
@@ -98,7 +96,6 @@ func TestHttpClient_GetWithQueryMap(t *testing.T) {
 		wantRespData dhttp.HttpResponse
 		wantStaus    int
 	}{
-		// TODO: Add test cases.
 		{"Test200", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetWithQueryMapRequest{URL: "https://www.baidu.com", QueryMap: map[string]string{"a": "1"}, Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 200}, 200},
 		{"Test404", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetWithQueryMapRequest{URL: "https://www.baidu.com", QueryMap: map[string]string{"a": "1"}, Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 404}, 404},
 	}
@@ -134,7 +131,6 @@ func TestHttpClient_GetWithQueryString(t *testing.T) {
 		wantRespData dhttp.HttpResponse
 		wantStaus    int
 	}{
-		// TODO: Add test cases.
 		{"Test200", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetWithQueryStringRequest{URL: "https://www.baidu.com", Query: "a=1", Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 200}, 200},
 		{"Test404", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetWithQueryStringRequest{URL: "https://www.baidu.com", Query: "a=1", Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 404}, 404},
 	}

@@ -1,4 +1,4 @@
-.PHONY: mod,run,cover,clean,debug,test,release
+.PHONY: mod,run,cover,clean,debug,test,release,stop
 
 CUR_PATH:=$(shell pwd)
 APP_PATH:=$(CUR_PATH)
@@ -12,11 +12,12 @@ export GO111MODULE=on
 
 default: debug
 
-clean:
+clean: stop
 	@rm -rf $(APP_PATH)/bin/*
 	@rm -rf $(APP_PATH)/config/config.toml
 	@rm -rf ./logs/*
 	@rm -rf ./nohup.out
+	@echo "$(BINARY_NAME) clean up completed"
 
 mod:
 	@go mod tidy -v
@@ -41,9 +42,12 @@ release: clean main.go go.sum go.mod
 	@echo "[release] $(BINARY_NAME) build success"
 
 run:
-	@nohup $(APP_PATH)/bin/$(BINARY_NAME) -c $(CUR_PATH)/config/config.toml
+	@nohup $(APP_PATH)/bin/$(BINARY_NAME) -c $(CUR_PATH)/config/config.toml 2>&1 &
+
+stop:
+	@ps -ef | grep bin/$(BINARY_NAME) | grep -v grep | awk '{print $$2}' | xargs kill -9
+	@echo "$(BINARY_NAME) service is shutdown"
 
 cover:
-	@go env
 	@go vet $(APP_PATH)
-	@go test -coverpkg="./..." -c -cover -covermode=atomic $(APP_PATH) -o $(APP_PATH)/bin/$(BINARY_NAME)_cover -gcflags='all=-N -l'
+	@go test -coverpkg="./..." -cover $(APP_PATH)/... -gcflags='all=-N -l'

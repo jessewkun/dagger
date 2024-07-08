@@ -32,7 +32,6 @@ package test
 // 		wantrespHeader map[string]string
 // 		wantStaus      string
 // 	}{
-// 		// TODO: Add test cases.
 // 		{"Test200", fields{client: &fasthttp.Client{}, Timeout: time.Duration(10 * time.Second)}, args{ctx, "https://www.baidu.com", map[string]string{"trace_id": "1"}, dhttp.HttpClientOptions{}}, nil, nil, "200"},
 // 		{"Test404", fields{client: &fasthttp.Client{}, Timeout: time.Duration(10 * time.Second)}, args{ctx, "https://www.baidu.com", map[string]string{"trace_id": "1"}, dhttp.HttpClientOptions{}}, nil, nil, "404"},
 // 	}
@@ -77,7 +76,6 @@ package test
 // 		wantRespHeader map[string]string
 // 		wantStaus      string
 // 	}{
-// 		// TODO: Add test cases.
 // 		{"Test200", fields{Client: &fasthttp.Client{}, Timeout: time.Duration(10 * time.Second)}, args{ctx, "https://www.baidu.com", nil, map[string]string{"trace_id": "1"}, dhttp.HttpClientOptions{}}, nil, nil, "200"},
 // 		{"Test404", fields{Client: &fasthttp.Client{}, Timeout: time.Duration(10 * time.Second)}, args{ctx, "https://www.baidu.com", nil, map[string]string{"trace_id": "1"}, dhttp.HttpClientOptions{}}, nil, nil, "404"},
 // 	}

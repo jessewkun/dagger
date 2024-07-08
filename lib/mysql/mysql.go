@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -10,7 +9,6 @@ import (
 
 	dlog "dagger/lib/logger"
 
-	"github.com/spf13/viper"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -20,35 +18,21 @@ import (
 
 const TAGNAME = "DAGGER_MYSQL"
 
-type Config struct {
-	Driver      string   `toml:"driver"`
-	Dsn         []string `toml:"dsn"`
-	MaxConn     int      `toml:"max_conn"`      // 最大连接数
-	MaxIdleConn int      `toml:"max_idle_conn"` // 最大空闲连接数
-	ConnMaxLife int      `toml:"conn_max_life"` // 连接最长持续时间， 默认1小时，单位秒
-	IsLog       bool     `toml:"is_log"`        // 是否记录日志  日志级别为info
-}
-
 // connList 数据库连接列表
 var connList map[string]*gorm.DB
+var mysqlCfg map[string]Config
 
 func init() {
 	connList = make(map[string]*gorm.DB)
 }
 
-// InitDb 初始化数据库
-func InitDb() {
-	for dbName := range viper.GetViper().GetStringMap("db") {
-		conf := Config{}
-		dbIns := fmt.Sprintf("db.%s", dbName)
-		if err := viper.GetViper().UnmarshalKey(dbIns, &conf); err != nil {
-			dlog.ErrorWithMsg(context.Background(), TAGNAME, "Unmarshal mysql config error, db %s error %s", dbName, err)
-			continue
-		}
-
+// InitMysql 初始化数据库
+func InitMysql(cfg map[string]Config) {
+	mysqlCfg = cfg
+	for dbName, conf := range cfg {
 		conn, err := dbConnect(dbName, conf)
 		if err != nil {
-			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s error %s", dbName, err)
+			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s faild, error: %s", dbName, err)
 			continue
 		}
 		connList[dbName] = conn
@@ -65,7 +49,7 @@ func dbConnect(dbName string, conf Config) (*gorm.DB, error) {
 	}
 
 	if len(conf.Dsn) < 1 {
-		return nil, errors.New(fmt.Sprintf("%s db dsn is empty", dbName))
+		return nil, fmt.Errorf("%s db dsn is empty", dbName)
 	}
 
 	logLevel := logger.Silent
@@ -87,54 +71,51 @@ func dbConnect(dbName string, conf Config) (*gorm.DB, error) {
 	var err error
 	master := conf.Dsn[0]
 
-	switch conf.Driver {
-	case "mysql":
-		slave := conf.Dsn[1:]
-		dbOne, err = gorm.Open(mysql.Open(master), &gorm.Config{
-			NamingStrategy: schema.NamingStrategy{SingularTable: true}, // 表前缀
-			Logger:         newLogger,
-		})
+	slave := conf.Dsn[1:]
+	dbOne, err = gorm.Open(mysql.Open(master), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{SingularTable: true}, // 表前缀
+		Logger:         newLogger,
+	})
 
-		if err != nil {
-			return nil, err
-		}
-
-		// 配置读写分离
-		dbResolverCfg := dbresolver.Config{
-			Sources:  []gorm.Dialector{mysql.Open(master)},
-			Replicas: []gorm.Dialector{},
-			Policy:   dbresolver.RandomPolicy{},
-		}
-
-		// 设置从库
-		if len(slave) > 0 {
-			var replicas []gorm.Dialector
-			for i := 0; i < len(slave); i++ {
-				replicas = append(replicas, mysql.Open(slave[i]))
-			}
-			dbResolverCfg.Replicas = replicas
-		}
-
-		if conf.MaxIdleConn == 0 {
-			conf.MaxIdleConn = 25
-		}
-
-		if conf.MaxConn == 0 {
-			conf.MaxConn = 50
-		}
-
-		if conf.ConnMaxLife == 0 {
-			conf.ConnMaxLife = 3600
-		}
-
-		dbOne.Use(
-			dbresolver.Register(dbResolverCfg).
-				// SetConnMaxIdleTime(time.Hour).
-				SetConnMaxLifetime(time.Duration(conf.ConnMaxLife) * time.Second).
-				SetMaxIdleConns(conf.MaxIdleConn).
-				SetMaxOpenConns(conf.MaxConn),
-		)
+	if err != nil {
+		return nil, err
 	}
+
+	// 配置读写分离
+	dbResolverCfg := dbresolver.Config{
+		Sources:  []gorm.Dialector{mysql.Open(master)},
+		Replicas: []gorm.Dialector{},
+		Policy:   dbresolver.RandomPolicy{},
+	}
+
+	// 设置从库
+	if len(slave) > 0 {
+		var replicas []gorm.Dialector
+		for i := 0; i < len(slave); i++ {
+			replicas = append(replicas, mysql.Open(slave[i]))
+		}
+		dbResolverCfg.Replicas = replicas
+	}
+
+	if conf.MaxIdleConn == 0 {
+		conf.MaxIdleConn = 25
+	}
+
+	if conf.MaxConn == 0 {
+		conf.MaxConn = 50
+	}
+
+	if conf.ConnMaxLife == 0 {
+		conf.ConnMaxLife = 3600
+	}
+
+	dbOne.Use(
+		dbresolver.Register(dbResolverCfg).
+			// SetConnMaxIdleTime(time.Hour).
+			SetConnMaxLifetime(time.Duration(conf.ConnMaxLife) * time.Second).
+			SetMaxIdleConns(conf.MaxIdleConn).
+			SetMaxOpenConns(conf.MaxConn),
+	)
 
 	return dbOne, nil
 }
@@ -151,20 +132,17 @@ func GetConn(dbIns string) *gorm.DB {
 	return connList[dbIns]
 }
 
-// 数据库探活
-func Active() {
-	for row := range viper.GetViper().GetStringMap("db") {
-		conf := Config{}
-		dbIns := fmt.Sprintf("db.%s", row)
-		if err := viper.GetViper().UnmarshalKey(dbIns, &conf); err != nil {
-			dlog.ErrorWithMsg(context.Background(), TAGNAME, "Unmarshal mysql config error, db %s error %s", row, err)
-			continue
-		}
-
-		_, err := dbConnect(row, conf)
+// mysql health check
+func HealthCheck() map[string]string {
+	resp := make(map[string]string)
+	for dbName, conf := range mysqlCfg {
+		_, err := dbConnect(dbName, conf)
 		if err != nil {
-			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s error %s", row, err)
-			continue
+			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s faild, error: %s", dbName, err)
+			resp[dbName] = err.Error()
+		} else {
+			resp[dbName] = "succ"
 		}
 	}
+	return resp
 }

@@ -11,9 +11,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}",
             "cwd": "${workspaceFolder}",
-            "env": {
-                "DAGGER_DEBUG": ""
-            },
+            "env": {},
             "args": ["-c", "${workspaceFolder}/config/debug.toml"],
         }
     ]

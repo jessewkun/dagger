@@ -9,17 +9,9 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/spf13/viper"
 )
 
 const TAGNAME = "DAGGER_REDIS"
-
-type Config struct {
-	Driver   string   `json:"driver"`
-	Nodes    []string `json:"nodes"`
-	Password string   `json:"password"`
-	Db       int      `json:"db"`
-}
 
 var connList map[string]map[string]*redis.Client
 
@@ -28,15 +20,8 @@ func init() {
 }
 
 // InitRedis 初始化redis
-func InitRedis() {
-	for dbName := range viper.GetViper().GetStringMap("cache") {
-		conf := Config{}
-		dbIns := fmt.Sprintf("cache.%s", dbName)
-		if err := viper.GetViper().UnmarshalKey(dbIns, &conf); err != nil {
-			dlog.ErrorWithMsg(context.Background(), TAGNAME, "Unmarshal redis config error, db %s error %s", dbName, err)
-			continue
-		}
-
+func InitRedis(cfg map[string]Config) {
+	for dbName, conf := range cfg {
 		if err := redisConnect(dbName, conf); err != nil {
 			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to redis %s error %s", dbName, err)
 			continue
@@ -51,23 +36,20 @@ func redisConnect(dbName string, conf Config) error {
 		return errors.New(fmt.Sprintf("%s redis node is empty", dbName))
 	}
 
-	switch conf.Driver {
-	case "redis":
-		for _, node := range conf.Nodes {
-			client := redis.NewClient(&redis.Options{
-				Addr:               node,
-				Password:           conf.Password,
-				DB:                 conf.Db,
-				PoolSize:           500,
-				IdleTimeout:        time.Second,
-				IdleCheckFrequency: 10 * time.Second,
-				MinIdleConns:       3,
-				MaxRetries:         3,
-				DialTimeout:        2 * time.Second,
-			})
-			connList[dbName] = make(map[string]*redis.Client, 0)
-			connList[dbName][node] = client
-		}
+	for _, node := range conf.Nodes {
+		client := redis.NewClient(&redis.Options{
+			Addr:               node,
+			Password:           conf.Password,
+			DB:                 conf.Db,
+			PoolSize:           500,
+			IdleTimeout:        time.Second,
+			IdleCheckFrequency: 10 * time.Second,
+			MinIdleConns:       3,
+			MaxRetries:         3,
+			DialTimeout:        2 * time.Second,
+		})
+		connList[dbName] = make(map[string]*redis.Client, 0)
+		connList[dbName][node] = client
 	}
 	return nil
 }
@@ -90,14 +72,19 @@ func GetConn(dbIns string) *redis.Client {
 	return connList[dbIns][randomKey]
 }
 
-// 探活服务
-func Active() {
+// redis health check
+func HealthCheck() map[string]map[string]string {
+	resp := make(map[string]map[string]string)
 	for dbName, conns := range connList {
+		resp[dbName] = make(map[string]string)
 		for node, conn := range conns {
 			if _, err := conn.Ping(context.Background()).Result(); err != nil {
 				dlog.ErrorWithMsg(context.Background(), TAGNAME, "redis ping db %s node %s error %s", dbName, node, err)
+				resp[dbName][node] = err.Error()
+			} else {
+				resp[dbName][node] = "succ"
 			}
-
 		}
 	}
+	return resp
 }

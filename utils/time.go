@@ -8,30 +8,30 @@ import (
 
 type LocalTime time.Time
 
-const timeFormat = "2006-01-02 15:04:05"
-const dateFormat = "2006-01-02"
-const timezone = "Asia/Shanghai"
+const TIME_FORMAT = "2006-01-02 15:04:05"
+const DATE_FORMAT = "2006-01-02"
+const TIMEZONE = "Asia/Shanghai"
 
 func (t LocalTime) MarshalJSON() ([]byte, error) {
-	b := make([]byte, 0, len(timeFormat)+2)
+	b := make([]byte, 0, len(TIME_FORMAT)+2)
 	b = append(b, '"')
-	b = time.Time(t).AppendFormat(b, timeFormat)
+	b = time.Time(t).AppendFormat(b, TIME_FORMAT)
 	b = append(b, '"')
 	return b, nil
 }
 
 func (t *LocalTime) UnmarshalJSON(data []byte) (err error) {
-	now, err := time.ParseInLocation(`"`+timeFormat+`"`, string(data), time.Local)
+	now, err := time.ParseInLocation(`"`+TIME_FORMAT+`"`, string(data), time.Local)
 	*t = LocalTime(now)
 	return
 }
 
 func (t LocalTime) String() string {
-	return time.Time(t).Format(timeFormat)
+	return time.Time(t).Format(TIME_FORMAT)
 }
 
 func (t LocalTime) local() time.Time {
-	loc, _ := time.LoadLocation(timezone)
+	loc, _ := time.LoadLocation(TIMEZONE)
 	return time.Time(t).In(loc)
 }
 
@@ -45,7 +45,7 @@ func (t LocalTime) Value() (driver.Value, error) {
 }
 
 func (t LocalTime) Date() string {
-	return time.Time(t).Format(dateFormat)
+	return time.Time(t).Format(DATE_FORMAT)
 }
 
 func (t *LocalTime) Scan(v interface{}) error {
@@ -58,7 +58,7 @@ func (t *LocalTime) Scan(v interface{}) error {
 }
 
 func IsDate(date string) bool {
-	_, err := time.Parse(dateFormat, date)
+	_, err := time.Parse(DATE_FORMAT, date)
 	if err != nil {
 		return false
 	}
@@ -66,11 +66,11 @@ func IsDate(date string) bool {
 }
 
 func Today() string {
-	return time.Now().Format(dateFormat)
+	return time.Now().Format(DATE_FORMAT)
 }
 
 func Now() string {
-	return time.Now().Format(timeFormat)
+	return time.Now().Format(TIME_FORMAT)
 }
 
 func TodayTimeStamp() int64 {
@@ -78,5 +78,5 @@ func TodayTimeStamp() int64 {
 }
 
 func TimestampToDate(timestamp int64) string {
-	return time.Unix(timestamp, 0).Format(dateFormat)
+	return time.Unix(timestamp, 0).Format(DATE_FORMAT)
 }

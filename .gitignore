@@ -4,3 +4,4 @@ logs/*
 config/config.toml
 lib/test/logs/*
 bin/*
+docs/*

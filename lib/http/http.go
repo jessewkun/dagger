@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"dagger/lib/logger"
-	"fmt"
-	"net/http"
 	"net/url"
 	"time"
 
@@ -16,55 +14,39 @@ import (
 
 const TAGNAME = "DAGGER_HTTP"
 
-// HttpClient
-type HttpClient struct {
-	Client     *resty.Client
-	Timeout    time.Duration
-	RetryCount int
-	debug      bool
-}
-
-func (h *HttpClient) String() string {
-	return fmt.Sprintf("Client: %p, Timeout: %s, RetryCount: %d, debug: %v", h.Client, h.Timeout, h.RetryCount, h.debug)
-}
-
-// HttpResponse
-type HttpResponse struct {
-	Body       []byte
-	Header     http.Header
-	StatusCode int
-	TraceInfo  resty.TraceInfo
-}
-
-func (h *HttpResponse) String() string {
-	return fmt.Sprintf("Body: %s, Header: %v, StatusCode: %d, TraceInfo: %+v", h.Body, h.Header, h.StatusCode, h.TraceInfo)
-}
-
 // NewHttpClient create a new http client
+// http client 的使用不需要全局初始化，因此为了方便使用，这里的 config 信息直接从 viper 中获取，避免使用者传入 common.cfg 信息
 func NewHttpClient(t time.Duration, retryCount int) *HttpClient {
-	return &HttpClient{
+	h := &HttpClient{
 		Client:     resty.New().SetTimeout(t),
 		Timeout:    t,
 		RetryCount: retryCount,
+		isTraceLog: false,
+		config: Config{
+			TransparentParameter: viper.GetStringSlice("http.transparent_parameter"),
+			IsTraceLog:           viper.GetBool("http.is_trace_log"),
+		},
 	}
-}
-
-// setTimeOut
-func (h *HttpClient) SetTimeOut(t time.Duration) *HttpClient {
-	h.Client.SetTimeout(t)
+	h.Client = h.Client.SetTimeout(h.Timeout)
+	h.Client = h.Client.SetRetryCount(h.RetryCount)
 	return h
 }
 
-// setDebug
-func (h *HttpClient) SetDebug(debug bool) *HttpClient {
-	h.debug = debug
+// SetIsTraceLog
+func (h *HttpClient) SetIsTraceLog(isTraceLog bool) *HttpClient {
+	h.isTraceLog = isTraceLog
 	return h
+}
+
+// isLogTraceInfo
+func (h *HttpClient) isTraceInfo() bool {
+	return h.config.IsTraceLog || h.isTraceLog
 }
 
 // setHeader
 func (h *HttpClient) setHeader(c context.Context, headers map[string]string) *HttpClient {
-	if transparentParameter := viper.GetStringSlice("log.transparent_parameter"); len(transparentParameter) > 0 {
-		for _, parameter := range transparentParameter {
+	if len(h.config.TransparentParameter) > 0 {
+		for _, parameter := range h.config.TransparentParameter {
 			if value := c.Value(parameter); value != nil {
 				h.Client.R().SetHeader(parameter, cast.ToString(value))
 			}
@@ -78,17 +60,12 @@ func (h *HttpClient) setHeader(c context.Context, headers map[string]string) *Ht
 	return h
 }
 
-// isLogTraceInfo
-func (h *HttpClient) isLogTraceInfo() bool {
-	return viper.GetBool("http.debug") || h.debug
-}
-
 // Post
-func (h *HttpClient) Post(c context.Context, rawURL string, data interface{}, headers map[string]string) (respData *HttpResponse, err error) {
-	h.setHeader(c, headers)
-	resp, err := h.Client.R().SetBody(data).Post(rawURL)
+func (h *HttpClient) Post(c context.Context, req PostRequest) (respData *HttpResponse, err error) {
+	h.setHeader(c, req.Headers)
+	resp, err := h.Client.R().SetBody(req.Data).Post(req.URL)
 	if err != nil {
-		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, rawURL: %s, data: %s, headers: %s, err: %s", h, rawURL, data, headers, err)
+		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
 	}
 	respData = &HttpResponse{
@@ -97,19 +74,18 @@ func (h *HttpClient) Post(c context.Context, rawURL string, data interface{}, he
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
-		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, data: %s, headers: %s, respData: %+v", h, rawURL, data, headers, respData)
+	if h.isTraceInfo() {
+		logger.Info(c, TAGNAME, "HttpClient: %s, req: %+v, respData: %+v", h, req, respData)
 	}
 	return respData, nil
 }
 
 // Upload
-// fileBytes 可能太大，不记录日志
-func (h *HttpClient) Upload(c context.Context, rawURL string, fileBytes []byte, param, fileName string, data map[string]string, headers map[string]string) (respData *HttpResponse, err error) {
-	h.setHeader(c, headers)
-	resp, err := h.Client.R().SetFileReader(param, fileName, bytes.NewReader(fileBytes)).SetFormData(data).Post(rawURL)
+func (h *HttpClient) Upload(c context.Context, req UploadRequest) (respData *HttpResponse, err error) {
+	h.setHeader(c, req.Headers)
+	resp, err := h.Client.R().SetFileReader(req.Param, req.FileName, bytes.NewReader(req.FileBytes)).SetFormData(req.Data).Post(req.URL)
 	if err != nil {
-		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, rawURL: %s, param: %s, fileName: %s, data: %s, headers: %s, err: %s", h, rawURL, param, fileName, data, headers, err)
+		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
 	}
 	respData = &HttpResponse{
@@ -118,18 +94,18 @@ func (h *HttpClient) Upload(c context.Context, rawURL string, fileBytes []byte, 
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
-		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, param: %s, fileName: %s, data: %s, headers: %s, respData: %+v", h, rawURL, param, fileName, data, headers, respData)
+	if h.isTraceInfo() {
+		logger.Info(c, TAGNAME, "HttpClient: %s, req: %+v, respData: %+v", h, req, respData)
 	}
 	return respData, nil
 }
 
 // UploadWithFilePath
-func (h *HttpClient) UploadWithFilePath(c context.Context, rawURL string, filePath string, fileName string, data map[string]string, headers map[string]string) (respData *HttpResponse, err error) {
-	h.setHeader(c, headers)
-	resp, err := h.Client.R().SetFile(fileName, filePath).SetFormData(data).Post(rawURL)
+func (h *HttpClient) UploadWithFilePath(c context.Context, req UploadWithFilePathRequest) (respData *HttpResponse, err error) {
+	h.setHeader(c, req.Headers)
+	resp, err := h.Client.R().SetFile(req.FileName, req.FilePath).SetFormData(req.Data).Post(req.URL)
 	if err != nil {
-		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, rawURL: %s, filePath: %s, fileName: %s, data: %s, headers: %s, err: %s", h, rawURL, filePath, fileName, data, headers, err)
+		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
 	}
 	respData = &HttpResponse{
@@ -138,18 +114,18 @@ func (h *HttpClient) UploadWithFilePath(c context.Context, rawURL string, filePa
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
-		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, filePath: %s, fileName: %s, data: %s, headers: %s, respData: %+v", h, rawURL, filePath, fileName, data, headers, respData)
+	if h.isTraceInfo() {
+		logger.Info(c, TAGNAME, "HttpClient: %s, req: %+v, respData: %+v", h, req, respData)
 	}
 	return respData, nil
 }
 
 // Download
-func (h *HttpClient) Download(c context.Context, rawURL string, filePath string, headers map[string]string) (respData *HttpResponse, err error) {
-	h.setHeader(c, headers)
-	resp, err := h.Client.R().SetOutput(filePath).Get(rawURL)
+func (h *HttpClient) Download(c context.Context, req DownloadRequest) (respData *HttpResponse, err error) {
+	h.setHeader(c, req.Headers)
+	resp, err := h.Client.R().SetOutput(req.FilePath).Get(req.URL)
 	if err != nil {
-		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, rawURL: %s, filePath: %s, headers: %s, err: %s", h, rawURL, filePath, headers, err)
+		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
 	}
 	respData = &HttpResponse{
@@ -157,18 +133,18 @@ func (h *HttpClient) Download(c context.Context, rawURL string, filePath string,
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
-		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, filePath: %s, headers: %s, respData: %+v", h, rawURL, filePath, headers, respData)
+	if h.isTraceInfo() {
+		logger.Info(c, TAGNAME, "HttpClient: %s, req: %+v, respData: %+v", h, req, respData)
 	}
 	return
 }
 
 // Get
-func (h *HttpClient) Get(c context.Context, rawURL string, headers map[string]string) (respData *HttpResponse, err error) {
-	h.setHeader(c, headers)
-	resp, err := h.Client.R().Get(rawURL)
+func (h *HttpClient) Get(c context.Context, req GetRequest) (respData *HttpResponse, err error) {
+	h.setHeader(c, req.Headers)
+	resp, err := h.Client.R().Get(req.URL)
 	if err != nil {
-		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, rawURL: %s, headers: %s, err: %s", h, rawURL, headers, err)
+		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
 	}
 	respData = &HttpResponse{
@@ -177,18 +153,18 @@ func (h *HttpClient) Get(c context.Context, rawURL string, headers map[string]st
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
-		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, headers: %s, respData: %+v", h, rawURL, headers, respData)
+	if h.isTraceInfo() {
+		logger.Info(c, TAGNAME, "HttpClient: %s, req: %+v, respData: %+v", h, req, respData)
 	}
 	return respData, nil
 }
 
 // GetWithQueryMap
-func (h *HttpClient) GetWithQueryMap(c context.Context, rawURL string, query map[string]string, headers map[string]string) (respData *HttpResponse, err error) {
-	h.setHeader(c, headers)
-	resp, err := h.Client.R().SetQueryParams(query).Get(rawURL)
+func (h *HttpClient) GetWithQueryMap(c context.Context, req GetWithQueryMapRequest) (respData *HttpResponse, err error) {
+	h.setHeader(c, req.Headers)
+	resp, err := h.Client.R().SetQueryParams(req.QueryMap).Get(req.URL)
 	if err != nil {
-		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, rawURL: %s, query: %s, headers: %s, err: %s", h, rawURL, query, headers, err)
+		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
 	}
 	respData = &HttpResponse{
@@ -197,18 +173,18 @@ func (h *HttpClient) GetWithQueryMap(c context.Context, rawURL string, query map
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
-		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, query: %s, headers: %s, respData: %+v", h, rawURL, query, headers, respData)
+	if h.isTraceInfo() {
+		logger.Info(c, TAGNAME, "HttpClient: %s, req: %+v, respData: %+v", h, req, respData)
 	}
 	return respData, nil
 }
 
 // GetWithQueryString
-func (h *HttpClient) GetWithQueryString(c context.Context, rawURL string, query string, headers map[string]string) (respData *HttpResponse, err error) {
-	h.setHeader(c, headers)
-	resp, err := h.Client.R().SetQueryString(query).Get(rawURL)
+func (h *HttpClient) GetWithQueryString(c context.Context, req GetWithQueryStringRequest) (respData *HttpResponse, err error) {
+	h.setHeader(c, req.Headers)
+	resp, err := h.Client.R().SetQueryString(req.Query).Get(req.URL)
 	if err != nil {
-		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, rawURL: %s, query: %s, headers: %s, err: %s", h, rawURL, query, headers, err)
+		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
 	}
 	respData = &HttpResponse{
@@ -217,8 +193,8 @@ func (h *HttpClient) GetWithQueryString(c context.Context, rawURL string, query 
 		StatusCode: resp.StatusCode(),
 		TraceInfo:  resp.Request.TraceInfo(),
 	}
-	if h.isLogTraceInfo() {
-		logger.Info(c, TAGNAME, "HttpClient: %s, rawURL: %s, query: %s, headers: %s, respData: %+v", h, rawURL, query, headers, respData)
+	if h.isTraceInfo() {
+		logger.Info(c, TAGNAME, "HttpClient: %s, req: %+v, respData: %+v", h, req, respData)
 	}
 	return respData, nil
 }

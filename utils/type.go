@@ -9,6 +9,9 @@ import (
 
 // IsOnlyChinese 判断字符串是否只包含中文
 func IsOnlyChinese(str string) bool {
+	if len(str) < 1 {
+		return false
+	}
 	var count int
 	for _, v := range str {
 		if unicode.Is(unicode.Han, v) {
@@ -28,5 +31,8 @@ func IsOnlyNumber(str string) bool {
 
 // IsZeroValue 判断是否是零值
 func IsZeroValue(x interface{}) bool {
+	if x == nil {
+		return true
+	}
 	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }

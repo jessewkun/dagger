@@ -1,4 +1,4 @@
-.PHONY: mod,run,cover,clean,debug,test,release,stop
+.PHONY: mod,run,cover,clean,debug,test,release,stop,swag
 
 CUR_PATH:=$(shell pwd)
 APP_PATH:=$(CUR_PATH)
@@ -47,6 +47,9 @@ run:
 stop:
 	@ps -ef | grep bin/$(BINARY_NAME) | grep -v grep | awk '{print $$2}' | xargs kill -9
 	@echo "$(BINARY_NAME) service is shutdown"
+
+swag:
+	@swag init
 
 cover:
 	@go vet $(APP_PATH)

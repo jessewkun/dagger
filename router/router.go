@@ -9,6 +9,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "dagger/docs"
+
+	swaggerFiles "github.com/swaggo/files"
 )
 
 func InitRouter(r *gin.Engine) *gin.Engine {
@@ -29,6 +34,11 @@ func InitRouter(r *gin.Engine) *gin.Engine {
 		}
 		c.JSON(http.StatusOK, sys.SuccResp(c, data))
 	})
+
+	// swagger
+	if gin.Mode() == gin.DebugMode {
+		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
 
 	v1Proxy := r.Group("/demo/v1/").Use(middleware.CheckLogin())
 	v1Proxy.POST("/index", demo.IndexHandler)

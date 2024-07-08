@@ -7,6 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// IndexHandler godoc
+//
+//	@Summary		IndexHandler
+//	@Description	这是一个示例接口
+//	@Tags			demo
+//	@Accept			x-www-form-urlencoded
+//	@Produce		json
+//	@Success		200	{object}	sys.ApiResult
+//	@Failure		200	{object}	sys.ApiResult
+//	@Router			/demo/v1/index [get]
 func IndexHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, sys.SystemErrorResp(c))
 	// c.JSON(http.StatusOK, sys.ParamErrorResp(c))

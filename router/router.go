@@ -9,10 +9,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 )
 
 func InitRouter(r *gin.Engine) *gin.Engine {
-	r.Use(gin.Recovery(), middleware.Cros(), middleware.Trace(), middleware.IOLog())
+	r.Use(gin.Recovery(), otelgin.Middleware("my-gin-server"), middleware.Cros(), middleware.Trace(), middleware.IOLog())
 	r.NoMethod(HandleNotFound)
 	r.NoRoute(HandleNotFound)
 

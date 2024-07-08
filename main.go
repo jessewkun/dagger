@@ -42,6 +42,7 @@ func init() {
 		fmt.Printf("Config file changed: %s\n", e.Name)
 	})
 
+	// sys.InitTracer()
 	logger.InitLogger(common.Cfg.Log)
 	mysql.InitMysql(common.Cfg.Mysql)
 	// redis.InitRedis(common.Cfg.Redis)
@@ -57,6 +58,7 @@ func main() {
 	}
 
 	go func() {
+		fmt.Printf("Starting server on %s\n", common.Cfg.Port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			panic(fmt.Errorf("Server startup failed: %v", err))
 		}

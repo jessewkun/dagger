@@ -1,4 +1,4 @@
-package sync
+package tools
 
 import (
 	"context"
@@ -6,8 +6,6 @@ import (
 	"runtime/debug"
 	"sync"
 )
-
-const TAGNAME = "dagger_sync"
 
 type WaitGroupWrapper struct {
 	sync.WaitGroup
@@ -26,7 +24,7 @@ func SafeGo(c context.Context, fun func()) {
 	defer func(ctx context.Context) {
 		if err := recover(); err != nil {
 			stack := string(debug.Stack())
-			logger.ErrorWithMsg(c, TAGNAME, "safeGo recover: %+v, stack is %s", err, stack)
+			logger.ErrorWithMsg(c, "dagger_safego", "safeGo recover: %+v, stack is %s", err, stack)
 		}
 	}(c)
 	fun()

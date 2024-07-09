@@ -17,7 +17,7 @@ func TestTest_AddTest(t *testing.T) {
 	}
 	type args struct {
 		ctx context.Context
-		t   Test
+		t   Demo
 	}
 	tests := []struct {
 		name    string
@@ -35,7 +35,7 @@ func TestTest_AddTest(t *testing.T) {
 			},
 			args{
 				context.Background(),
-				Test{
+				Demo{
 					Name:       "test",
 					Email:      "a@a.com",
 					CreateTime: utils.LocalTime(time.Now()),
@@ -52,7 +52,7 @@ func TestTest_AddTest(t *testing.T) {
 			},
 			args{
 				context.Background(),
-				Test{
+				Demo{
 					Name:       "test",
 					Email:      "a@a.com",
 					CreateTime: utils.LocalTime(time.Now()),
@@ -63,7 +63,7 @@ func TestTest_AddTest(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			w := Test{
+			w := Demo{
 				Id:         tt.fields.Id,
 				Name:       tt.fields.Name,
 				Email:      tt.fields.Email,

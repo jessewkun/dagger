@@ -15,7 +15,7 @@ func NewApiResult(c *gin.Context, code int, msg string, data interface{}) *ApiRe
 		Data:    data,
 		TraceId: c.GetString("trace_id"),
 	}
-	c.Set(constant.CTX_DAGGER_OUTPUT, resp.String())
+	c.Set(constant.CTX_DAGGER_OUTPUT, resp)
 	return resp
 }
 

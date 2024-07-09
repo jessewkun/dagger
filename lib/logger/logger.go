@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -81,17 +80,8 @@ func formatField(c context.Context, tag string) []zapcore.Field {
 }
 
 // Info log
-func Info(c context.Context, tag string, template interface{}, args ...interface{}) {
-	var msg string
-
-	if tpl, flag := template.(string); flag {
-		msg = fmt.Sprintf(tpl, args...)
-	}
-
-	if tpl, flag := template.(map[string]interface{}); flag {
-		msg, _ = jsoniter.MarshalToString(tpl)
-	}
-
+func Info(c context.Context, tag string, msg string, args ...interface{}) {
+	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Info(msg, fields...)
 }
@@ -112,76 +102,36 @@ func Error(c context.Context, tag string, err error) {
 }
 
 // ErrorWithMsg log
-func ErrorWithMsg(c context.Context, tag string, template interface{}, args ...interface{}) {
-	var msg string
-	if tpl, flag := template.(string); flag {
-		msg = fmt.Sprintf(tpl, args...)
-	}
-
-	if tpl, flag := template.(map[string]interface{}); flag {
-		msg, _ = jsoniter.MarshalToString(tpl)
-	}
-
+func ErrorWithMsg(c context.Context, tag string, msg string, args ...interface{}) {
+	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Error(msg, fields...)
 }
 
 // Debug log
-func Debug(c context.Context, tag string, template interface{}, args ...interface{}) {
-	var msg string
-	if tpl, flag := template.(string); flag {
-		msg = fmt.Sprintf(tpl, args...)
-	}
-
-	if tpl, flag := template.(map[string]interface{}); flag {
-		msg, _ = jsoniter.MarshalToString(tpl)
-	}
-
+func Debug(c context.Context, tag string, msg string, args ...interface{}) {
+	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Debug(msg, fields...)
 }
 
 // Warn log
-func Warn(c context.Context, tag string, template interface{}, args ...interface{}) {
-	var msg string
-	if tpl, flag := template.(string); flag {
-		msg = fmt.Sprintf(tpl, args...)
-	}
-
-	if tpl, flag := template.(map[string]interface{}); flag {
-		msg, _ = jsoniter.MarshalToString(tpl)
-	}
-
+func Warn(c context.Context, tag string, msg string, args ...interface{}) {
+	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Warn(msg, fields...)
 }
 
 // Panic log
-func Panic(c context.Context, tag string, template interface{}, args ...interface{}) {
-	var msg string
-	if tpl, flag := template.(string); flag {
-		msg = fmt.Sprintf(tpl, args...)
-	}
-
-	if tpl, flag := template.(map[string]interface{}); flag {
-		msg, _ = jsoniter.MarshalToString(tpl)
-	}
-
+func Panic(c context.Context, tag string, msg string, args ...interface{}) {
+	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Panic(msg, fields...)
 }
 
 // Fatal log
-func Fatal(c context.Context, tag string, template interface{}, args ...interface{}) {
-	var msg string
-	if tpl, flag := template.(string); flag {
-		msg = fmt.Sprintf(tpl, args...)
-	}
-
-	if tpl, flag := template.(map[string]interface{}); flag {
-		msg, _ = jsoniter.MarshalToString(tpl)
-	}
-
+func Fatal(c context.Context, tag string, msg string, args ...interface{}) {
+	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Fatal(msg, fields...)
 }

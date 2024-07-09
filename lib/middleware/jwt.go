@@ -38,20 +38,20 @@ func JwtAuth() gin.HandlerFunc {
 			return
 		}
 
-		c.Set("username", claims.Username)
+		c.Set("user_id", claims.UserId)
 		c.Next()
 	}
 }
 
 type Claims struct {
-	Username string `json:"username"`
+	UserId int `json:"user_id"`
 	jwt.StandardClaims
 }
 
-func CreateJwtToken(exp time.Duration, username string) (string, error) {
+func CreateJwtToken(exp time.Duration, userId int) (string, error) {
 	expirationTime := time.Now().Add(exp)
 	claims := &Claims{
-		Username: username,
+		UserId: userId,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},

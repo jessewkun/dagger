@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"context"
 	"dagger/lib/debug"
 	mysqllib "dagger/lib/mysql"
 
@@ -9,8 +10,8 @@ import (
 
 var debuglog = debug.InitDebug("mysql")
 
-func mainDb() *gorm.DB {
-	d := mysqllib.GetConn("main")
+func mainDb(ctx context.Context) *gorm.DB {
+	d := mysqllib.GetConn("main").WithContext(ctx)
 	if debug.IsDebug("mysql") {
 		return d.Debug()
 	}

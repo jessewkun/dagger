@@ -17,7 +17,7 @@ import (
 )
 
 func InitRouter(r *gin.Engine) *gin.Engine {
-	r.Use(gin.Recovery(), middleware.Cros(), middleware.Trace(), middleware.IOLog())
+	r.Use(middleware.DaggerRecovery(), middleware.Cros(), middleware.Trace(), middleware.IOLog(), middleware.CheckLogin())
 	r.NoMethod(HandleNotFound)
 	r.NoRoute(HandleNotFound)
 
@@ -40,8 +40,8 @@ func InitRouter(r *gin.Engine) *gin.Engine {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
-	v1Proxy := r.Group("/demo/v1/").Use(middleware.CheckLogin())
-	v1Proxy.POST("/index", demo.IndexHandler)
+	v1Proxy := r.Group("/demo/v1/")
+	v1Proxy.GET("/index", demo.IndexHandler)
 
 	return r
 }

@@ -20,6 +20,8 @@ func IOLog() gin.HandlerFunc {
 		if c.Request.Method == http.MethodPost {
 			bodyByte, _ = io.ReadAll(c.Request.Body)
 		}
+		var ctxResp any
+		ctxResp, _ = c.Get(constant.CTX_DAGGER_OUTPUT)
 		logger.InfoWithField(c.Request.Context(), "iolog", "", map[string]interface{}{
 			"duration":        time.Since(t),
 			"request_uri":     c.Request.RequestURI,
@@ -28,7 +30,7 @@ func IOLog() gin.HandlerFunc {
 			"remote_ip":       c.ClientIP(),
 			"user_agent":      c.Request.UserAgent(),
 			"status":          c.Writer.Status(),
-			"response":        c.GetString(constant.CTX_DAGGER_OUTPUT),
+			"response":        &ctxResp,
 			"response_length": c.Writer.Size(),
 			"body":            string(bodyByte),
 		})

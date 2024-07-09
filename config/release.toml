@@ -25,6 +25,8 @@ port = ":8000"
         max_conn = 50           # 最大连接数
         max_idle_conn = 25      # 最大空闲连接数
         conn_max_life = 3600    # 连接最长持续时间， 默认1小时，单位秒
+        slow_threshold = 500    # 慢查询阈值，单位毫秒
+        ignore_record_not_found_error = false # 是否忽略记录不存在的错误
         is_log = true           # 是否记录日志  日志级别为info
 
 [redis]

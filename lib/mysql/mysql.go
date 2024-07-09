@@ -3,8 +3,6 @@ package mysql
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
 	"time"
 
 	dlog "dagger/lib/logger"
@@ -56,16 +54,10 @@ func dbConnect(dbName string, conf Config) (*gorm.DB, error) {
 	if conf.IsLog {
 		logLevel = logger.Info
 	}
-
-	newLogger := logger.New(
-		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
-		logger.Config{
-			SlowThreshold:             time.Second, // Slow SQL threshold
-			LogLevel:                  logLevel,    // Log level
-			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
-			Colorful:                  false,       // Disable color
-		},
-	)
+	slowThreshold := 500 * time.Millisecond
+	if conf.SlowThreshold > 0 {
+		slowThreshold = time.Duration(conf.SlowThreshold) * time.Millisecond
+	}
 
 	var dbOne *gorm.DB
 	var err error
@@ -74,7 +66,7 @@ func dbConnect(dbName string, conf Config) (*gorm.DB, error) {
 	slave := conf.Dsn[1:]
 	dbOne, err = gorm.Open(mysql.Open(master), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{SingularTable: true}, // 表前缀
-		Logger:         newLogger,
+		Logger:         NewMysqlLogger(slowThreshold, logLevel, conf.IgnoreRecordNotFoundError),
 	})
 
 	if err != nil {

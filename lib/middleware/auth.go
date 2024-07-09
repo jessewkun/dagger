@@ -9,17 +9,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CheckLogin 检查登录态
-// 检查失败的时候强制退出
+// CheckLogin
 func CheckLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token, err := c.Request.Cookie("dagger_token")
-		if len(token.Value) == 0 || err != nil {
+		if err != nil || len(token.Value) == 0 {
 			c.JSON(http.StatusOK, sys.ErrorResp(c, errors.New("请重新登录")))
 			c.Abort()
 			return
 		}
-
 		// TODO 实现自定义的 token 验证逻辑
 		userId := 1
 		c.Set("userId", userId)

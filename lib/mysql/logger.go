@@ -41,13 +41,27 @@ func (ml *mysqlLogger) Trace(ctx context.Context, begin time.Time, fc func() (sq
 	elapsed := time.Since(begin)
 	sql, rows := fc()
 	if err != nil && (!errors.Is(err, gorm.ErrRecordNotFound) || !ml.IgnoreRecordNotFoundError) {
-		dlog.ErrorWithMsg(ctx, "SQL_ERROR", "sql=%v, rows=%v, elapsed=%v, err=%v", sql, rows, elapsed, err)
+		dlog.ErrorWithMsg(ctx, TAGNAME, "DAGGER_MYSQL_QUERY_ERROR", map[string]interface{}{
+			"sql":     sql,
+			"rows":    rows,
+			"elapsed": elapsed,
+			"err":     err,
+		})
 		return
 	}
 
 	if ml.SlowThreshold != 0 && elapsed > ml.SlowThreshold {
-		dlog.Warn(ctx, "SLOW_QUERY", "sql=%v, rows=%v, elapsed=%v, slowthreshold=%v", sql, rows, elapsed, ml.SlowThreshold)
+		dlog.WarnWithField(ctx, TAGNAME, "DAGGER_MYSQL_SLOW_QUERY", map[string]interface{}{
+			"sql":           sql,
+			"rows":          rows,
+			"elapsed":       elapsed,
+			"slowthreshold": ml.SlowThreshold,
+		})
 	} else {
-		dlog.Info(ctx, "MySQL_Query", "sql=%v, rows=%v, elapsed=%v", sql, rows, elapsed)
+		dlog.InfoWithField(ctx, TAGNAME, "DAGGER_MYSQL_QUERY", map[string]interface{}{
+			"sql":     sql,
+			"rows":    rows,
+			"elapsed": elapsed,
+		})
 	}
 }

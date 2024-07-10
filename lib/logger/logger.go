@@ -108,6 +108,15 @@ func ErrorWithMsg(c context.Context, tag string, msg string, args ...interface{}
 	logzap.Error(msg, fields...)
 }
 
+// ErrorWithField log
+func ErrorWithField(c context.Context, tag string, msg string, field map[string]interface{}) {
+	fields := formatField(c, tag)
+	for k, v := range field {
+		fields = append(fields, zap.Any(k, v))
+	}
+	logzap.Error(msg, fields...)
+}
+
 // Debug log
 func Debug(c context.Context, tag string, msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
@@ -119,6 +128,15 @@ func Debug(c context.Context, tag string, msg string, args ...interface{}) {
 func Warn(c context.Context, tag string, msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
+	logzap.Warn(msg, fields...)
+}
+
+// WarnWithField log
+func WarnWithField(c context.Context, tag string, msg string, field map[string]interface{}) {
+	fields := formatField(c, tag)
+	for k, v := range field {
+		fields = append(fields, zap.Any(k, v))
+	}
 	logzap.Warn(msg, fields...)
 }
 

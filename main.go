@@ -5,6 +5,7 @@ import (
 	"dagger/common"
 	"dagger/lib/logger"
 	"dagger/lib/mysql"
+	"dagger/lib/redis"
 	"dagger/router"
 	"flag"
 	"fmt"
@@ -44,7 +45,7 @@ func init() {
 
 	logger.InitLogger(common.Cfg.Log)
 	mysql.InitMysql(common.Cfg.Mysql)
-	// redis.InitRedis(common.Cfg.Redis)
+	redis.InitRedis(common.Cfg.Redis)
 }
 
 func main() {
@@ -75,7 +76,7 @@ func gracefulExit(srv *http.Server) {
 	logger.Info(ctx, "main", "Received signal: %v. Shutting down server...", sig)
 
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.ErrorWithMsg(ctx, "main", "Server shutdown failed: %v", err)
+		logger.ErrorWithMsg(ctx, "MAIN", "Server shutdown failed: %v", err)
 	}
 	logger.Info(ctx, "main", "Server gracefully shutdown")
 	fmt.Println("Server gracefully shutdown")

@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"dagger/app/dto"
 	"dagger/model/mysql"
 )
 
@@ -12,9 +13,30 @@ func NewDemoService() *demoService {
 }
 
 func (s *demoService) GetDemoById(ctx context.Context, id int) (mysql.Demo, error) {
-	return mysql.Demo{}.GetDemoById(ctx, id)
+	return mysql.NewDemoModel().GetDemoById(ctx, id)
 }
 
 func (s *demoService) GetDemoList(ctx context.Context, page, pageSize int) ([]mysql.Demo, error) {
-	return mysql.Demo{}.GetDemoList(ctx, page, pageSize)
+	return mysql.NewDemoModel().GetDemoList(ctx, page, pageSize)
+}
+
+func (s *demoService) AddDemo(ctx context.Context, req dto.ReqAddDemo) (int, error) {
+	d := mysql.Demo{
+		Name:  req.Name,
+		Email: req.Email,
+	}
+	return mysql.NewDemoModel().Add(ctx, d)
+}
+
+func (s *demoService) UpdateDemo(ctx context.Context, req dto.ReqUpdateDemo) (int, error) {
+	d := mysql.Demo{
+		Id:    req.Id,
+		Name:  req.Name,
+		Email: req.Email,
+	}
+	return mysql.NewDemoModel().Update(ctx, d)
+}
+
+func (s *demoService) DeleteDemo(ctx context.Context, req dto.ReqDeleteDemo) error {
+	return mysql.NewDemoModel().Delete(ctx, req.Id)
 }

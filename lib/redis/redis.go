@@ -22,34 +22,65 @@ func init() {
 // InitRedis 初始化redis
 func InitRedis(cfg map[string]Config) {
 	for dbName, conf := range cfg {
+		err := setDefaultConfig(&conf)
+		if err != nil {
+			dlog.ErrorWithMsg(context.Background(), TAGNAME, "mysql %s setDefaultConfig error: %s", dbName, err)
+			continue
+		}
 		if err := redisConnect(dbName, conf); err != nil {
 			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to redis %s error %s", dbName, err)
 			continue
 		}
-		dlog.Info(context.Background(), TAGNAME, "connect to redis %s succ", dbName)
 	}
+}
+
+// setDefaultConfig 设置默认配置
+func setDefaultConfig(conf *Config) error {
+	if len(conf.Addrs) < 1 {
+		return errors.New(fmt.Sprintf("redis addrs is empty"))
+	}
+	if conf.PoolSize == 0 {
+		conf.PoolSize = 500
+	}
+	if conf.IdleTimeout == 0 {
+		conf.IdleTimeout = time.Second
+	}
+	if conf.IdleCheckFrequency == 0 {
+		conf.IdleCheckFrequency = 10 * time.Second
+	}
+	if conf.MinIdleConns == 0 {
+		conf.MinIdleConns = 3
+	}
+	if conf.MaxRetries == 0 {
+		conf.MaxRetries = 3
+	}
+	if conf.DialTimeout == 0 {
+		conf.DialTimeout = 2 * time.Second
+	}
+
+	return nil
 }
 
 // redisConnect 连接 redis
 func redisConnect(dbName string, conf Config) error {
-	if len(conf.Nodes) < 1 {
-		return errors.New(fmt.Sprintf("%s redis node is empty", dbName))
-	}
-
-	for _, node := range conf.Nodes {
+	for _, addr := range conf.Addrs {
 		client := redis.NewClient(&redis.Options{
-			Addr:               node,
+			Addr:               addr,
 			Password:           conf.Password,
 			DB:                 conf.Db,
-			PoolSize:           500,
-			IdleTimeout:        time.Second,
-			IdleCheckFrequency: 10 * time.Second,
-			MinIdleConns:       3,
-			MaxRetries:         3,
-			DialTimeout:        2 * time.Second,
+			PoolSize:           conf.PoolSize,
+			IdleTimeout:        conf.IdleTimeout,
+			IdleCheckFrequency: conf.IdleCheckFrequency,
+			MinIdleConns:       conf.MinIdleConns,
+			MaxRetries:         conf.MaxRetries,
+			DialTimeout:        conf.DialTimeout,
 		})
+		if conf.IsLog {
+			client.AddHook(&DaggerRedisHook{})
+		}
 		connList[dbName] = make(map[string]*redis.Client, 0)
-		connList[dbName][node] = client
+		connList[dbName][addr] = client
+		dlog.Info(context.Background(), TAGNAME, "connect to redis %s addr %s succ", dbName, addr)
 	}
 	return nil
 }
@@ -77,12 +108,12 @@ func HealthCheck() map[string]map[string]string {
 	resp := make(map[string]map[string]string)
 	for dbName, conns := range connList {
 		resp[dbName] = make(map[string]string)
-		for node, conn := range conns {
+		for addr, conn := range conns {
 			if _, err := conn.Ping(context.Background()).Result(); err != nil {
-				dlog.ErrorWithMsg(context.Background(), TAGNAME, "redis ping db %s node %s error %s", dbName, node, err)
-				resp[dbName][node] = err.Error()
+				dlog.ErrorWithMsg(context.Background(), TAGNAME, "redis ping db %s addr %s error %s", dbName, addr, err)
+				resp[dbName][addr] = err.Error()
 			} else {
-				resp[dbName][node] = "succ"
+				resp[dbName][addr] = "succ"
 			}
 		}
 	}

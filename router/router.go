@@ -47,6 +47,7 @@ func InitRouter(r *gin.Engine) *gin.Engine {
 	v1Proxy.POST("/add", demo.AddHandler)
 	v1Proxy.POST("/update", demo.UpdateHandler)
 	v1Proxy.POST("/delete", demo.DeleteHandler)
+	v1Proxy.POST("/redis", demo.RedisHandler)
 
 	return r
 }

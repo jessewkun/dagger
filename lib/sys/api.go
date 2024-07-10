@@ -21,6 +21,9 @@ func NewApiResult(c *gin.Context, code int, msg string, data interface{}) *ApiRe
 
 // SuccResp success response
 func SuccResp(c *gin.Context, data interface{}) *ApiResult {
+	if data == nil {
+		data = struct{}{}
+	}
 	return NewApiResult(c, 0, "succ", data)
 }
 

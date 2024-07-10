@@ -10,7 +10,6 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"gorm.io/gorm/schema"
 	"gorm.io/plugin/dbresolver"
 )
 
@@ -28,6 +27,11 @@ func init() {
 func InitMysql(cfg map[string]Config) {
 	mysqlCfg = cfg
 	for dbName, conf := range cfg {
+		err := setDefaultConfig(&conf)
+		if err != nil {
+			dlog.ErrorWithMsg(context.Background(), TAGNAME, "mysql %s setDefaultConfig error: %s", dbName, err)
+			continue
+		}
 		conn, err := dbConnect(dbName, conf)
 		if err != nil {
 			dlog.ErrorWithMsg(context.Background(), TAGNAME, "connect to mysql %s faild, error: %s", dbName, err)
@@ -38,16 +42,37 @@ func InitMysql(cfg map[string]Config) {
 	}
 }
 
+// setDefaultConfig 设置默认配置
+func setDefaultConfig(conf *Config) error {
+	if len(conf.Dsn) < 1 {
+		return fmt.Errorf("mysql dsn is invalid")
+	}
+
+	if conf.MaxConn == 0 {
+		conf.MaxConn = 50
+	}
+
+	if conf.MaxIdleConn == 0 {
+		conf.MaxIdleConn = 25
+	}
+
+	if conf.ConnMaxLife == 0 {
+		conf.ConnMaxLife = 3600
+	}
+
+	if conf.SlowThreshold == 0 {
+		conf.SlowThreshold = 500
+	}
+
+	return nil
+}
+
 // dbConnect 连接数据库
 func dbConnect(dbName string, conf Config) (*gorm.DB, error) {
 	if _, ok := connList[dbName]; ok {
 		if connList[dbName] != nil {
 			return connList[dbName], nil
 		}
-	}
-
-	if len(conf.Dsn) < 1 {
-		return nil, fmt.Errorf("%s db dsn is empty", dbName)
 	}
 
 	logLevel := logger.Silent
@@ -62,13 +87,10 @@ func dbConnect(dbName string, conf Config) (*gorm.DB, error) {
 	var dbOne *gorm.DB
 	var err error
 	master := conf.Dsn[0]
-
 	slave := conf.Dsn[1:]
 	dbOne, err = gorm.Open(mysql.Open(master), &gorm.Config{
-		NamingStrategy: schema.NamingStrategy{SingularTable: true}, // 表前缀
-		Logger:         NewMysqlLogger(slowThreshold, logLevel, conf.IgnoreRecordNotFoundError),
+		Logger: newMysqlLogger(slowThreshold, logLevel, conf.IgnoreRecordNotFoundError),
 	})
-
 	if err != nil {
 		return nil, err
 	}
@@ -87,18 +109,6 @@ func dbConnect(dbName string, conf Config) (*gorm.DB, error) {
 			replicas = append(replicas, mysql.Open(slave[i]))
 		}
 		dbResolverCfg.Replicas = replicas
-	}
-
-	if conf.MaxIdleConn == 0 {
-		conf.MaxIdleConn = 25
-	}
-
-	if conf.MaxConn == 0 {
-		conf.MaxConn = 50
-	}
-
-	if conf.ConnMaxLife == 0 {
-		conf.ConnMaxLife = 3600
 	}
 
 	dbOne.Use(

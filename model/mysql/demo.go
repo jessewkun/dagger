@@ -22,7 +22,7 @@ func (table *Demo) TableName() string {
 	return "demo"
 }
 
-func (w Demo) AddTest(ctx context.Context, t Demo) (id int, _err error) {
+func (w Demo) Add(ctx context.Context, t Demo) (id int, _err error) {
 	_err = mainDb(ctx).Table(w.TableName()).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "email"}},
 		DoUpdates: clause.AssignmentColumns([]string{"name", "modify_time"}),
@@ -44,57 +44,10 @@ func (w Demo) GetDemoById(ctx context.Context, id int) (demo Demo, err error) {
 	return
 }
 
-func (w Demo) ListByCondition(ctx context.Context, req Demo) (resp []*Demo, _err error) {
-	db := mainDb(ctx).Table(w.TableName())
-	if req.Name != "" {
-		db = db.Where("name = ?", req.Name)
-	}
-	if req.Email != "" {
-		db = db.Where("email = ?", req.Email)
-	}
-	// if len(req.StartTime) > 0 {
-	// 	db = db.Where("create_time >= ?", req.StartTime)
-	// }
-	// if len(req.EndTime) > 0 {
-	// 	db = db.Where("create_time <= ?", req.EndTime)
-	// }
-
-	// _err = mainDb().Raw(sql).Scan(&resp).Error
-	_err = db.Find(&resp).Error
-	// _err = db.Count(&count).Error
-	if _err == nil || _err.Error() == "record not found" {
-		_err = nil
-	}
-
-	if _err != nil {
-		logger.ErrorWithMsg(ctx, TAGDEMO, "ListByCondition err, req: %+v, err: %+v", req, _err)
-		return
-	}
-	return
-}
-
-func (w Demo) CountByCondition(ctx context.Context, req Demo) (count int64, _err error) {
-	db := mainDb(ctx).Table(w.TableName())
-	if req.Name != "" {
-		db = db.Where("name = ?", req.Name)
-	}
-	if req.Email != "" {
-		db = db.Where("email = ?", req.Email)
-	}
-	// if len(req.StartTime) > 0 {
-	// 	db = db.Where("create_time >= ?", req.StartTime)
-	// }
-	// if len(req.EndTime) > 0 {
-	// 	db = db.Where("create_time <= ?", req.EndTime)
-	// }
-
-	_err = db.Count(&count).Error
-	if _err == nil || _err.Error() == "record not found" {
-		_err = nil
-	}
-
-	if _err != nil {
-		logger.ErrorWithMsg(ctx, TAGDEMO, "ListByCondition err, req: %+v, err: %+v", req, _err)
+func (w Demo) GetDemoList(ctx context.Context, id int, pagesize int) (demos []Demo, err error) {
+	err = mainDb(ctx).Table(w.TableName()).Where("id > ?", id).Limit(pagesize).Find(&demos).Error
+	if err != nil && err.Error() != "record not found" {
+		logger.ErrorWithMsg(ctx, TAGDEMO, "GetDemoList error, id: %d, err: %+v", id, err)
 		return
 	}
 	return

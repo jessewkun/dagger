@@ -17,13 +17,13 @@ import (
 )
 
 func InitRouter(r *gin.Engine) *gin.Engine {
-	r.Use(middleware.DaggerRecovery(), middleware.Cros(), middleware.Trace(), middleware.IOLog(), middleware.CheckLogin())
+	r.Use(middleware.DaggerRecovery(), middleware.Cros(), middleware.Trace(), middleware.IOLog())
 	r.NoMethod(HandleNotFound)
 	r.NoRoute(HandleNotFound)
 
 	// ping
 	r.GET("/healthcheck/ping", func(c *gin.Context) {
-		c.String(200, "Hello World")
+		c.String(200, "pong")
 	})
 
 	// 组件探活
@@ -42,6 +42,11 @@ func InitRouter(r *gin.Engine) *gin.Engine {
 
 	v1Proxy := r.Group("/demo/v1/")
 	v1Proxy.GET("/index", demo.IndexHandler)
+	v1Proxy.GET("/one", demo.OneHandler)
+	v1Proxy.GET("/list", demo.ListHandler)
+	v1Proxy.POST("/add", demo.AddHandler)
+	v1Proxy.POST("/update", demo.UpdateHandler)
+	v1Proxy.POST("/delete", demo.DeleteHandler)
 
 	return r
 }

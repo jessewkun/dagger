@@ -3,43 +3,44 @@ package mysql
 import (
 	"context"
 	dlog "dagger/lib/logger"
+	"errors"
 	"time"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
-// NewMysqlLogger 创建一个mysql日志记录器
-func NewMysqlLogger(slowThreshold time.Duration, level logger.LogLevel, ignore bool) *MysqlLogger {
-	return &MysqlLogger{
+// newMysqlLogger 创建一个mysql日志记录器
+func newMysqlLogger(slowThreshold time.Duration, level logger.LogLevel, ignore bool) *mysqlLogger {
+	return &mysqlLogger{
 		SlowThreshold:             slowThreshold,
 		LogLevel:                  level,
 		IgnoreRecordNotFoundError: ignore,
 	}
 }
 
-var _ logger.Interface = (*MysqlLogger)(nil)
+var _ logger.Interface = (*mysqlLogger)(nil)
 
-func (ml *MysqlLogger) LogMode(lev logger.LogLevel) logger.Interface {
-	return &MysqlLogger{}
+func (ml *mysqlLogger) LogMode(lev logger.LogLevel) logger.Interface {
+	return &mysqlLogger{}
 }
 
-func (ml *MysqlLogger) Info(ctx context.Context, msg string, args ...interface{}) {
+func (ml *mysqlLogger) Info(ctx context.Context, msg string, args ...interface{}) {
 	dlog.Info(ctx, TAGNAME, msg, args)
 }
 
-func (ml *MysqlLogger) Warn(ctx context.Context, msg string, args ...interface{}) {
+func (ml *mysqlLogger) Warn(ctx context.Context, msg string, args ...interface{}) {
 	dlog.Warn(ctx, TAGNAME, msg, args)
 }
 
-func (ml *MysqlLogger) Error(ctx context.Context, msg string, args ...interface{}) {
+func (ml *mysqlLogger) Error(ctx context.Context, msg string, args ...interface{}) {
 	dlog.ErrorWithMsg(ctx, TAGNAME, msg, args)
 }
 
-func (ml *MysqlLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
+func (ml *mysqlLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql string, rowsAffected int64), err error) {
 	elapsed := time.Since(begin)
 	sql, rows := fc()
-	if err != nil && (err != gorm.ErrRecordNotFound || !ml.IgnoreRecordNotFoundError) {
+	if err != nil && (!errors.Is(err, gorm.ErrRecordNotFound) || !ml.IgnoreRecordNotFoundError) {
 		dlog.ErrorWithMsg(ctx, "SQL_ERROR", "sql=%v, rows=%v, elapsed=%v, err=%v", sql, rows, elapsed, err)
 		return
 	}

@@ -20,19 +20,34 @@ func Zap() *zap.Logger {
 }
 
 func InitLogger(cfg Config) {
+	setDefaultConfig(&cfg)
 	logcfg = cfg
 	logzap = zap.New(initCore(), zap.AddCallerSkip(1), zap.AddCaller())
+}
+
+func setDefaultConfig(conf *Config) {
+	if conf.MaxSize == 0 {
+		conf.MaxSize = 100
+	}
+
+	if conf.MaxAge == 0 {
+		conf.MaxAge = 7
+	}
+
+	if conf.MaxBackup == 0 {
+		conf.MaxBackup = 10
+	}
 }
 
 func initCore() zapcore.Core {
 	opts := []zapcore.WriteSyncer{
 		zapcore.AddSync(&lumberjack.Logger{
-			Filename:   logcfg.Path,      // ⽇志⽂件路径
-			MaxSize:    logcfg.MaxSize,   // 单位为MB,默认为100MB
-			MaxAge:     logcfg.MaxAge,    // 文件最多保存多少天
-			LocalTime:  true,             // 采用本地时间
-			Compress:   false,            // 是否压缩日志
-			MaxBackups: logcfg.MaxBackup, // 保留旧文件的最大个数
+			Filename:   logcfg.Path,
+			MaxSize:    logcfg.MaxSize,
+			MaxAge:     logcfg.MaxAge,
+			LocalTime:  true,
+			Compress:   false,
+			MaxBackups: logcfg.MaxBackup,
 		}),
 	}
 

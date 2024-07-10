@@ -2,7 +2,6 @@
 
 CUR_PATH:=$(shell pwd)
 APP_PATH:=$(CUR_PATH)
-CONFIG_NAME:=$(CUR_PATH)/config.toml
 BINARY_NAME = dagger
 
 export GO111MODULE=on

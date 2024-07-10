@@ -10,11 +10,20 @@ import (
 
 // HttpClient
 type HttpClient struct {
-	Client     *resty.Client // resty client
-	Timeout    time.Duration // 超时时间
-	RetryCount int           // 重试次数
-	isTraceLog bool          // 是否记录trace log, 代码中手段控制单个请求是否记录trace log
-	config     Config        // http config
+	// resty client
+	Client *resty.Client
+
+	// 超时时间
+	Timeout time.Duration
+
+	// 重试次数
+	RetryCount int
+
+	// 是否记录trace log, 代码中手段控制单个请求是否记录trace log
+	isTraceLog bool
+
+	// http config
+	config Config
 }
 
 func (h *HttpClient) String() string {
@@ -23,10 +32,17 @@ func (h *HttpClient) String() string {
 
 // HttpResponse
 type HttpResponse struct {
-	Body       []byte          // http response body
-	Header     http.Header     // http response header
-	StatusCode int             // http response status code
-	TraceInfo  resty.TraceInfo // http response trace info
+	// http response body
+	Body []byte
+
+	// http response header
+	Header http.Header
+
+	// http response status code
+	StatusCode int
+
+	// http response trace info
+	TraceInfo resty.TraceInfo
 }
 
 func (h *HttpResponse) String() string {
@@ -35,8 +51,11 @@ func (h *HttpResponse) String() string {
 
 // http config
 type Config struct {
-	TransparentParameter []string `toml:"transparent_parameter" mapstructure:"transparent_parameter"` // 透传参数，继承上下文中的参数
-	IsTraceLog           bool     `toml:"is_trace_log" mapstructure:"is_trace_log"`                   // 是否记录全部请求的 trace log，配置文件控制，支持手动修改配置文件，自动生效
+	// 透传参数，继承上下文中的参数
+	TransparentParameter []string `toml:"transparent_parameter" mapstructure:"transparent_parameter"`
+
+	// 是否记录全部请求的 trace log，配置文件控制，支持手动修改配置文件，自动生效
+	IsTraceLog bool `toml:"is_trace_log" mapstructure:"is_trace_log"`
 }
 
 // post request

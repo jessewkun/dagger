@@ -76,7 +76,7 @@ func redisConnect(dbName string, conf Config) error {
 			DialTimeout:        conf.DialTimeout,
 		})
 		if conf.IsLog {
-			client.AddHook(&DaggerRedisHook{})
+			client.AddHook(&daggerRedisHook{})
 		}
 		connList[dbName] = make(map[string]*redis.Client, 0)
 		connList[dbName][addr] = client

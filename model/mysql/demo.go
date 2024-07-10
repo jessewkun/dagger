@@ -2,18 +2,15 @@ package mysql
 
 import (
 	"context"
-	"dagger/lib/logger"
 	"dagger/utils"
-
-	"gorm.io/gorm/clause"
 )
 
 type Demo struct {
-	Id         int             `json:"id" orm:"id"`                   // 主键 id
-	Name       string          `json:"name" orm:"name"`               // 名称
-	Email      string          `json:"email" orm:"email"`             // 邮箱
-	CreateTime utils.LocalTime `json:"create_time" orm:"create_time"` // 创建时间
-	ModifyTime utils.LocalTime `json:"modify_time" orm:"modify_time"` // 修改时间
+	Id         int             `json:"id" gorm:"primaryKey"`                                                     // 主键 id
+	Name       string          `json:"name" gorm:"size:64;not null"`                                             // 名称
+	Email      string          `json:"email" gorm:"size:64;not null"`                                            // 邮箱
+	CreateTime utils.LocalTime `json:"create_time" gorm:"default:CURRENT_TIMESTAMP"`                             // 创建时间
+	ModifyTime utils.LocalTime `json:"modify_time" gorm:"default:CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP"` // 修改时间
 }
 
 const TAGDEMO = "model demo"
@@ -22,32 +19,50 @@ func (table *Demo) TableName() string {
 	return "demo"
 }
 
-func (w Demo) Add(ctx context.Context, t Demo) (id int, _err error) {
-	_err = mainDb(ctx).Table(w.TableName()).Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "email"}},
-		DoUpdates: clause.AssignmentColumns([]string{"name", "modify_time"}),
-	}).Create(&t).Error
+func NewDemoModel() *Demo {
+	return &Demo{}
+}
+
+func (w *Demo) Add(ctx context.Context, d Demo) (id int, _err error) {
+	_err = mainDb(ctx).Table(w.TableName()).Create(&d).Error
 	if _err != nil {
-		logger.ErrorWithMsg(ctx, TAGDEMO, "AddTest error, test: %+v, err: %+v", t, _err)
 		return 0, _err
 	}
-	id = t.Id
+	id = d.Id
 	return
 }
 
-func (w Demo) GetDemoById(ctx context.Context, id int) (demo Demo, err error) {
-	err = mainDb(ctx).Table(w.TableName()).Where("id", id).First(&demo).Error
-	if err != nil && err.Error() != "record not found" {
-		logger.ErrorWithMsg(ctx, TAGDEMO, "GetDemoById error, id: %d, err: %+v", id, err)
+func (w *Demo) Update(ctx context.Context, d Demo) (rows int, _err error) {
+	res := mainDb(ctx).Table(w.TableName()).Model(w).Where("id", d.Id).UpdateColumns(d)
+	if res.Error != nil {
+		// mysql lib 支持在 error 的时候自动打印日志，所以这里不需要再打印日志
+		return 0, res.Error
+	}
+	return int(res.RowsAffected), nil
+}
+
+func (w *Demo) Delete(ctx context.Context, id int) (err error) {
+	err = mainDb(ctx).Table(w.TableName()).Where("id", id).Delete(&Demo{}).Error
+	if err != nil {
+		// mysql lib 支持在 error 的时候自动打印日志，所以这里不需要再打印日志
 		return
 	}
 	return
 }
 
-func (w Demo) GetDemoList(ctx context.Context, id int, pagesize int) (demos []Demo, err error) {
+func (w *Demo) GetDemoById(ctx context.Context, id int) (demo Demo, err error) {
+	err = mainDb(ctx).Table(w.TableName()).Where("id", id).First(&demo).Error
+	if err != nil && err.Error() != "record not found" {
+		// mysql lib 支持在 error 的时候自动打印日志，所以这里不需要再打印日志
+		return
+	}
+	return
+}
+
+func (w *Demo) GetDemoList(ctx context.Context, id int, pagesize int) (demos []Demo, err error) {
 	err = mainDb(ctx).Table(w.TableName()).Where("id > ?", id).Limit(pagesize).Find(&demos).Error
 	if err != nil && err.Error() != "record not found" {
-		logger.ErrorWithMsg(ctx, TAGDEMO, "GetDemoList error, id: %d, err: %+v", id, err)
+		// mysql lib 支持在 error 的时候自动打印日志，所以这里不需要再打印日志
 		return
 	}
 	return

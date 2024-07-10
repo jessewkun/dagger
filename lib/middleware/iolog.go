@@ -22,7 +22,7 @@ func IOLog() gin.HandlerFunc {
 		}
 		var ctxResp any
 		ctxResp, _ = c.Get(constant.CTX_DAGGER_OUTPUT)
-		logger.InfoWithField(c.Request.Context(), "iolog", "", map[string]interface{}{
+		logger.InfoWithField(c.Request.Context(), TAGNAME, "IOLOG", map[string]interface{}{
 			"duration":        time.Since(t),
 			"request_uri":     c.Request.RequestURI,
 			"method":          c.Request.Method,

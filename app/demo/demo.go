@@ -1,10 +1,13 @@
 package demo
 
 import (
+	"dagger/app/dto"
 	"dagger/lib/logger"
 	"dagger/lib/sys"
+	"dagger/model/redis"
 	"dagger/service"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -20,7 +23,7 @@ import (
 //	@method			get
 //	@Param			id	query	int	true	"ID"
 //	@Produce		json
-//	@Success		200	{object}	sys.ApiResult{data=mysql.Demo}	"成功"
+//	@Success		200	{object}	sys.ApiResult{data=mysql.Demo}	"succ"
 //	@Failure		200	{object}	sys.ApiResult
 //	@Router			/demo/v1/index [get]
 func IndexHandler(c *gin.Context) {
@@ -49,7 +52,7 @@ func IndexHandler(c *gin.Context) {
 // @method		get
 // @Param		id	query	int	true	"ID"
 // @Produce		json
-// @Success		200	{object}	sys.ApiResult{data=mysql.Demo}	"成功"
+// @Success		200	{object}	sys.ApiResult{data=mysql.Demo}	"succ"
 // @Failure		200	{object}	sys.ApiResult
 // @Router		/demo/v1/one [get]
 func OneHandler(c *gin.Context) {
@@ -81,7 +84,7 @@ func OneHandler(c *gin.Context) {
 // @Param		id	query	int	true	"ID"
 // @Param		pagesize	query	int	false	"分页大小，默认20"
 // @Produce		json
-// @Success		200	{object}	sys.ApiResult{data=[]mysql.Demo}	"成功"
+// @Success		200	{object}	sys.ApiResult{data=[]mysql.Demo}	"succ"
 // @Failure		200	{object}	sys.ApiResult
 // @Router		/demo/v1/list [get]
 func ListHandler(c *gin.Context) {
@@ -115,10 +118,108 @@ func ListHandler(c *gin.Context) {
 	}))
 }
 
+// AddHandler godoc
+//
+// @Summary		AddHandler
+// @Description	这是一个添加数据示例接口
+// @Tags		demo
+// @Accept		json
+// @method		post
+// @Param		reqAddDemo	body	dto.ReqAddDemo	true	"ReqAddDemo"
+// @Produce		json
+// @Success		200	{object}	sys.ApiResult	"succ"
+// @Failure		200	{object}	sys.ApiResult
+// @Router		/demo/v1/add [post]
 func AddHandler(c *gin.Context) {
-
+	var req = dto.ReqAddDemo{}
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, sys.ParamErrorResp(c))
+		return
+	}
+	if req.Email == "" || req.Name == "" {
+		c.JSON(http.StatusOK, sys.ParamErrorResp(c))
+		return
+	}
+	id, err := service.NewDemoService().AddDemo(c.Request.Context(), req)
+	if err != nil {
+		c.JSON(http.StatusOK, sys.ErrorResp(c, err))
+		return
+	}
+	c.JSON(http.StatusOK, sys.SuccResp(c, gin.H{"id": id}))
 }
 
-func UpdateHandler(c *gin.Context) {}
+// UpdateHandler godoc
+//
+// @Summary		UpdateHandler
+// @Description	这是一个更新数据示例接口
+// @Tags		demo
+// @Accept		json
+// @method		post
+// @Param		reqUpdateDemo	body	dto.ReqUpdateDemo	true	"ReqUpdateDemo"
+// @Produce		json
+// @Success		200	{object}	sys.ApiResult	"succ"
+// @Failure		200	{object}	sys.ApiResult
+// @Router		/demo/v1/update [post]
+func UpdateHandler(c *gin.Context) {
+	var req = dto.ReqUpdateDemo{}
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, sys.ParamErrorResp(c))
+		return
+	}
+	if req.Id < 1 || req.Email == "" || req.Name == "" {
+		c.JSON(http.StatusOK, sys.ParamErrorResp(c))
+		return
+	}
+	rows, err := service.NewDemoService().UpdateDemo(c.Request.Context(), req)
+	if err != nil {
+		c.JSON(http.StatusOK, sys.ErrorResp(c, err))
+		return
+	}
+	c.JSON(http.StatusOK, sys.SuccResp(c, gin.H{"rows": rows}))
+}
 
-func DeleteHandler(c *gin.Context) {}
+// DeleteHandler godoc
+//
+// @Summary		DeleteHandler
+// @Description	这是一个删除数据示例接口
+// @Tags		demo
+// @Accept		json
+// @method		post
+// @Param		reqDeleteDemo	body	dto.ReqDeleteDemo	true	"ReqDeleteDemo"
+// @Produce		json
+// @Success		200	{object}	sys.ApiResult	"succ"
+// @Failure		200	{object}	sys.ApiResult
+// @Router		/demo/v1/delete [post]
+func DeleteHandler(c *gin.Context) {
+	var req = dto.ReqDeleteDemo{}
+	err := c.ShouldBindJSON(&req)
+	if err != nil {
+		c.JSON(http.StatusOK, sys.ParamErrorResp(c))
+		return
+	}
+	if req.Id < 1 {
+		c.JSON(http.StatusOK, sys.ParamErrorResp(c))
+		return
+	}
+	if err := service.NewDemoService().DeleteDemo(c.Request.Context(), req); err != nil {
+		c.JSON(http.StatusOK, sys.ErrorResp(c, err))
+		return
+	}
+	c.JSON(http.StatusOK, sys.SuccResp(c, nil))
+}
+
+// redis
+func RedisHandler(c *gin.Context) {
+	var res string
+	var err error
+	res, err = redis.TestGet(c.Request.Context(), "test")
+	fmt.Printf("%+v\n", res)
+	fmt.Printf("%+v\n", err)
+	err = redis.TestSet(c.Request.Context(), "test", "123")
+	fmt.Printf("%+v\n", err)
+	res, err = redis.TestGet(c.Request.Context(), "test")
+	fmt.Printf("%+v\n", res)
+	fmt.Printf("%+v\n", err)
+}

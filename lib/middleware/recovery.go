@@ -17,7 +17,10 @@ func DaggerRecovery() gin.HandlerFunc {
 		defer func() {
 			if r := recover(); r != nil {
 				trace := PanicTrace(2)
-				logger.ErrorWithMsg(c.Request.Context(), "panic", "recover %v, panic: %v", r, string(trace))
+				logger.ErrorWithField(c.Request.Context(), TAGNAME, "PANIC", map[string]interface{}{
+					"recover": r,
+					"panic":   string(trace),
+				})
 				if sys.IsDebug() {
 					fmt.Printf("recover: %+v\n", r)
 					fmt.Printf("panic: %+v\n", string(trace))

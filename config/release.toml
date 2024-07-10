@@ -31,8 +31,9 @@ port = ":8000"
 
 [redis]
     [redis.main]
-        node = [
+        addrs = [
             "127.0.0.1:6379"
         ]
         password = ""
         db = 0
+        is_log = true           # 是否记录日志

@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"dagger/lib/constant"
 	"dagger/lib/logger"
+	"dagger/lib/sys"
 	"io"
 	"net/http"
 	"time"
@@ -21,7 +21,7 @@ func IOLog() gin.HandlerFunc {
 			bodyByte, _ = io.ReadAll(c.Request.Body)
 		}
 		var ctxResp any
-		ctxResp, _ = c.Get(constant.CTX_DAGGER_OUTPUT)
+		ctxResp, _ = c.Get(sys.CTX_DAGGER_OUTPUT)
 		logger.InfoWithField(c.Request.Context(), TAGNAME, "IOLOG", map[string]interface{}{
 			"duration":        time.Since(t),
 			"request_uri":     c.Request.RequestURI,

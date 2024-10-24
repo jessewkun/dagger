@@ -45,7 +45,7 @@ run:
 	@nohup $(APP_PATH)/bin/$(BINARY_NAME) -c $(CUR_PATH)/config/config.toml 2>&1 &
 
 stop:
-	@ps -ef | grep bin/$(BINARY_NAME) | grep -v grep | awk '{print $$2}' | xargs kill -9
+	@ps -ef | grep bin/$(BINARY_NAME) | grep -v grep | awk '{print $$2}' | xargs -r kill -9
 	@echo "$(BINARY_NAME) service is shutdown"
 
 swag:

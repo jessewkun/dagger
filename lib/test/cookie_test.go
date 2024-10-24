@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	dhttp "dagger/lib/http"
 )
@@ -42,16 +43,16 @@ func TestSetCookie(t *testing.T) {
 	tests := []struct {
 		name     string
 		value    string
-		maxAge   int64
+		maxAge   time.Duration
 		path     string
 		domain   string
 		secure   bool
 		httpOnly bool
 	}{
-		{"key1", "value1", 0, "/", "example.com", true, true},
-		{"key2", "value2", 10, "/", "", true, false},
-		{"key3", "value3", 20, "/test", "example.org", false, true},
-		{"key4", "value4", 30, "/", "something.com", false, false},
+		{"key1", "value1", 0 * time.Second, "/", "example.com", true, true},
+		{"key2", "value2", 10 * time.Second, "/", "", true, false},
+		{"key3", "value3", 20 * time.Second, "/test", "example.org", false, true},
+		{"key4", "value4", 30 * time.Second, "/", "something.com", false, false},
 	}
 	for _, test := range tests {
 		response := NewResponseRecorder()

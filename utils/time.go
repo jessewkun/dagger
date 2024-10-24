@@ -80,3 +80,13 @@ func TodayTimeStamp() int64 {
 func TimestampToDate(timestamp int64) string {
 	return time.Unix(timestamp, 0).Format(DATE_FORMAT)
 }
+
+func DatetimeToTime(datetime string) time.Time {
+	loc, _ := time.LoadLocation(TIMEZONE)
+	t, _ := time.ParseInLocation(TIME_FORMAT, datetime, loc)
+	return t
+}
+
+func TimeDifference(t1, t2 string) int64 {
+	return DatetimeToTime(t1).Unix() - DatetimeToTime(t2).Unix()
+}

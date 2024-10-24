@@ -50,3 +50,21 @@ func TestRandomElement(t *testing.T) {
 		})
 	}
 }
+
+func TestRandomString(t *testing.T) {
+	type args struct {
+		n int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{"test1", args{11}, "1234567890"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Log(RandomString(tt.args.n))
+		})
+	}
+}

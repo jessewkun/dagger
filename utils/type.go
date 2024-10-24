@@ -2,6 +2,7 @@ package utils
 
 import (
 	"reflect"
+	"regexp"
 	"strconv"
 	"unicode"
 	"unicode/utf8"
@@ -35,4 +36,11 @@ func IsZeroValue(x interface{}) bool {
 		return true
 	}
 	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
+}
+
+// IsChinesePhoneNumber 判断字符串是否是中国手机号码
+func IsChinesePhoneNumber(phone string) bool {
+	// 定义中国手机号码的正则表达式
+	re := regexp.MustCompile(`^1[3-9]\d{9}$`)
+	return re.MatchString(phone)
 }

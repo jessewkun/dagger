@@ -221,8 +221,8 @@ func (h *HttpClient) GetWithQueryString(c context.Context, req GetWithQueryStrin
 	return respData, nil
 }
 
-// HttpBuildQuery http build query
-func HttpBuildQuery(data map[string]interface{}) string {
+// BuildQuery http build query
+func BuildQuery(data map[string]interface{}) string {
 	var uri url.URL
 
 	q := uri.Query()

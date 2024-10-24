@@ -32,6 +32,14 @@ func NewHttpClient(t time.Duration, retryCount int) *HttpClient {
 	return h
 }
 
+func (h *HttpClient) newRequest(c context.Context) {
+	h.r = h.Client.R()
+}
+
+func (h *HttpClient) destroyRequest(c context.Context) {
+	h.r = nil
+}
+
 // SetIsTraceLog
 func (h *HttpClient) SetIsTraceLog(isTraceLog bool) *HttpClient {
 	h.isTraceLog = isTraceLog
@@ -48,13 +56,13 @@ func (h *HttpClient) setHeader(c context.Context, headers map[string]string) *Ht
 	if len(h.config.TransparentParameter) > 0 {
 		for _, parameter := range h.config.TransparentParameter {
 			if value := c.Value(parameter); value != nil {
-				h.Client.R().SetHeader(parameter, cast.ToString(value))
+				h.r.SetHeader(parameter, cast.ToString(value))
 			}
 		}
 	}
 	if len(headers) > 0 {
 		for k, v := range headers {
-			h.Client.R().SetHeader(k, v)
+			h.r.SetHeader(k, v)
 		}
 	}
 	return h
@@ -62,8 +70,10 @@ func (h *HttpClient) setHeader(c context.Context, headers map[string]string) *Ht
 
 // Post
 func (h *HttpClient) Post(c context.Context, req PostRequest) (respData *HttpResponse, err error) {
+	h.newRequest(c)
+	defer h.destroyRequest(c)
 	h.setHeader(c, req.Headers)
-	resp, err := h.Client.R().SetBody(req.Data).Post(req.URL)
+	resp, err := h.r.SetBody(req.Data).Post(req.URL)
 	if err != nil {
 		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
@@ -82,8 +92,10 @@ func (h *HttpClient) Post(c context.Context, req PostRequest) (respData *HttpRes
 
 // Upload
 func (h *HttpClient) Upload(c context.Context, req UploadRequest) (respData *HttpResponse, err error) {
+	h.newRequest(c)
+	defer h.destroyRequest(c)
 	h.setHeader(c, req.Headers)
-	resp, err := h.Client.R().SetFileReader(req.Param, req.FileName, bytes.NewReader(req.FileBytes)).SetFormData(req.Data).Post(req.URL)
+	resp, err := h.r.SetFileReader(req.Param, req.FileName, bytes.NewReader(req.FileBytes)).SetFormData(req.Data).Post(req.URL)
 	if err != nil {
 		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
@@ -102,8 +114,10 @@ func (h *HttpClient) Upload(c context.Context, req UploadRequest) (respData *Htt
 
 // UploadWithFilePath
 func (h *HttpClient) UploadWithFilePath(c context.Context, req UploadWithFilePathRequest) (respData *HttpResponse, err error) {
+	h.newRequest(c)
+	defer h.destroyRequest(c)
 	h.setHeader(c, req.Headers)
-	resp, err := h.Client.R().SetFile(req.FileName, req.FilePath).SetFormData(req.Data).Post(req.URL)
+	resp, err := h.r.SetFile(req.FileName, req.FilePath).SetFormData(req.Data).Post(req.URL)
 	if err != nil {
 		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
@@ -122,8 +136,10 @@ func (h *HttpClient) UploadWithFilePath(c context.Context, req UploadWithFilePat
 
 // Download
 func (h *HttpClient) Download(c context.Context, req DownloadRequest) (respData *HttpResponse, err error) {
+	h.newRequest(c)
+	defer h.destroyRequest(c)
 	h.setHeader(c, req.Headers)
-	resp, err := h.Client.R().SetOutput(req.FilePath).Get(req.URL)
+	resp, err := h.r.SetOutput(req.FilePath).Get(req.URL)
 	if err != nil {
 		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
@@ -141,8 +157,10 @@ func (h *HttpClient) Download(c context.Context, req DownloadRequest) (respData 
 
 // Get
 func (h *HttpClient) Get(c context.Context, req GetRequest) (respData *HttpResponse, err error) {
+	h.newRequest(c)
+	defer h.destroyRequest(c)
 	h.setHeader(c, req.Headers)
-	resp, err := h.Client.R().Get(req.URL)
+	resp, err := h.r.Get(req.URL)
 	if err != nil {
 		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
@@ -161,8 +179,10 @@ func (h *HttpClient) Get(c context.Context, req GetRequest) (respData *HttpRespo
 
 // GetWithQueryMap
 func (h *HttpClient) GetWithQueryMap(c context.Context, req GetWithQueryMapRequest) (respData *HttpResponse, err error) {
+	h.newRequest(c)
+	defer h.destroyRequest(c)
 	h.setHeader(c, req.Headers)
-	resp, err := h.Client.R().SetQueryParams(req.QueryMap).Get(req.URL)
+	resp, err := h.r.SetQueryParams(req.QueryMap).Get(req.URL)
 	if err != nil {
 		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return
@@ -181,8 +201,10 @@ func (h *HttpClient) GetWithQueryMap(c context.Context, req GetWithQueryMapReque
 
 // GetWithQueryString
 func (h *HttpClient) GetWithQueryString(c context.Context, req GetWithQueryStringRequest) (respData *HttpResponse, err error) {
+	h.newRequest(c)
+	defer h.destroyRequest(c)
 	h.setHeader(c, req.Headers)
-	resp, err := h.Client.R().SetQueryString(req.Query).Get(req.URL)
+	resp, err := h.r.SetQueryString(req.Query).Get(req.URL)
 	if err != nil {
 		logger.ErrorWithMsg(c, TAGNAME, "HttpClient: %s, req: %+v, err: %s", h, req, err)
 		return

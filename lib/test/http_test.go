@@ -61,8 +61,7 @@ func TestHttpClient_Get(t *testing.T) {
 		wantRespData dhttp.HttpResponse
 		wantStaus    int
 	}{
-		{"Test200", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetRequest{URL: "https://www.baidu.com", Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 200}, 200},
-		{"Test404", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetRequest{URL: "https://www.baidu.com", Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 404}, 404},
+		{"Test200", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetRequest{URL: "http://localhost:8001/user/v1/checkLogin?_debug=xplan", Headers: map[string]string{"trace_id": "1", "Authorization": "Bearer 123"}}}, dhttp.HttpResponse{StatusCode: 200}, 200},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -96,8 +95,7 @@ func TestHttpClient_GetWithQueryMap(t *testing.T) {
 		wantRespData dhttp.HttpResponse
 		wantStaus    int
 	}{
-		{"Test200", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetWithQueryMapRequest{URL: "https://www.baidu.com", QueryMap: map[string]string{"a": "1"}, Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 200}, 200},
-		{"Test404", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetWithQueryMapRequest{URL: "https://www.baidu.com", QueryMap: map[string]string{"a": "1"}, Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 404}, 404},
+		{"Test200", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetWithQueryMapRequest{URL: "http://localhost:8001/user/v1/checkLogin?_debug=xplan", QueryMap: map[string]string{"a": "1"}, Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 200}, 200},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -131,8 +129,7 @@ func TestHttpClient_GetWithQueryString(t *testing.T) {
 		wantRespData dhttp.HttpResponse
 		wantStaus    int
 	}{
-		{"Test200", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetWithQueryStringRequest{URL: "https://www.baidu.com", Query: "a=1", Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 200}, 200},
-		{"Test404", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetWithQueryStringRequest{URL: "https://www.baidu.com", Query: "a=1", Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 404}, 404},
+		{"Test200", fields{Timeout: time.Duration(10 * time.Second), RetryCount: 1}, args{ctx, dhttp.GetWithQueryStringRequest{URL: "http://localhost:8001/user/v1/checkLogin?_debug=xplan", Query: "a=1", Headers: map[string]string{"trace_id": "1"}}}, dhttp.HttpResponse{StatusCode: 200}, 200},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

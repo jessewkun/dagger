@@ -10,11 +10,12 @@ import (
 
 // HttpClient
 type HttpClient struct {
-	Client     *resty.Client // resty client
-	Timeout    time.Duration // 超时时间
-	RetryCount int           // 重试次数
-	isTraceLog bool          // 是否记录trace log, 代码中手段控制单个请求是否记录trace log
-	config     Config        // http config
+	Client     *resty.Client  // resty client
+	r          *resty.Request // resty request
+	Timeout    time.Duration  // 超时时间
+	RetryCount int            // 重试次数
+	isTraceLog bool           // 是否记录trace log, 代码中手段控制单个请求是否记录trace log
+	config     Config         // http config
 }
 
 func (h *HttpClient) String() string {

@@ -54,3 +54,8 @@ func ForbiddenErrorResp(c *gin.Context) *ApiResult {
 func NotfoundErrorResp(c *gin.Context) *ApiResult {
 	return ErrorResp(c, NotfoundError)
 }
+
+// RateLimiterErrorResp rate limiter error response
+func RateLimiterErrorResp(c *gin.Context) *ApiResult {
+	return ErrorResp(c, RateLimiterError)
+}

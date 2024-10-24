@@ -19,6 +19,9 @@ var ForbiddenError = DaggerError{1002, errors.New("Permission denied")}
 // 未找到
 var NotfoundError = DaggerError{1003, errors.New("Not found")}
 
+// 限流
+var RateLimiterError = DaggerError{1100, errors.New("Too many requests")}
+
 // NewDaggerError 创建自定义错误
 // 业务自定义错误码必须大于10000，小于10000的错误码为系统错误码，10000为默认业务错误码
 func NewDaggerError(code int, err error) DaggerError {

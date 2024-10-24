@@ -19,6 +19,7 @@ require (
 	github.com/swaggo/gin-swagger v1.6.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9
+	golang.org/x/time v0.5.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.10

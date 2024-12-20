@@ -1,6 +1,7 @@
 package common
 
 import (
+	"dagger/lib/alarm"
 	"dagger/lib/debug"
 	"dagger/lib/http"
 	"dagger/lib/logger"
@@ -17,7 +18,16 @@ type DaggerConfig struct {
 	Log   logger.Config           `toml:"log" mapstructure:"log"`     // 日志配置
 	Mysql map[string]mysql.Config `toml:"mysql" mapstructure:"mysql"` // mysql 配置
 	Redis map[string]redis.Config `toml:"redis" mapstructure:"redis"` // redis 配置
+	Alarm alarm.Config            `toml:"alarm" mapstructure:"alarm"` // 报警配置
 }
 
 // 项目配置
 var Cfg DaggerConfig
+
+func IsRelease() bool {
+	return Cfg.Mode == "release"
+}
+
+func IsDebug() bool {
+	return Cfg.Mode == "debug"
+}

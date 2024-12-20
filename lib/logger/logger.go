@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"dagger/lib/alarm"
 	"dagger/utils"
 	"fmt"
 	"os"
@@ -84,6 +85,7 @@ func Info(c context.Context, tag string, msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Info(msg, fields...)
+	SendAlarm(c, "info", tag, msg)
 }
 
 // InfoWithField log
@@ -93,12 +95,14 @@ func InfoWithField(c context.Context, tag string, msg string, field map[string]i
 		fields = append(fields, zap.Any(k, v))
 	}
 	logzap.Info(msg, fields...)
+	SendAlarm(c, "info", tag, msg)
 }
 
 // Error log
 func Error(c context.Context, tag string, err error) {
 	fields := formatField(c, tag)
 	logzap.Error(err.Error(), fields...)
+	SendAlarm(c, "error", tag, err.Error())
 }
 
 // ErrorWithMsg log
@@ -106,6 +110,7 @@ func ErrorWithMsg(c context.Context, tag string, msg string, args ...interface{}
 	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Error(msg, fields...)
+	SendAlarm(c, "error", tag, msg)
 }
 
 // ErrorWithField log
@@ -115,6 +120,7 @@ func ErrorWithField(c context.Context, tag string, msg string, field map[string]
 		fields = append(fields, zap.Any(k, v))
 	}
 	logzap.Error(msg, fields...)
+	SendAlarm(c, "error", tag, msg)
 }
 
 // Debug log
@@ -122,6 +128,7 @@ func Debug(c context.Context, tag string, msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Debug(msg, fields...)
+	SendAlarm(c, "debug", tag, msg)
 }
 
 // Warn log
@@ -129,6 +136,7 @@ func Warn(c context.Context, tag string, msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Warn(msg, fields...)
+	SendAlarm(c, "warn", tag, msg)
 }
 
 // WarnWithField log
@@ -138,6 +146,7 @@ func WarnWithField(c context.Context, tag string, msg string, field map[string]i
 		fields = append(fields, zap.Any(k, v))
 	}
 	logzap.Warn(msg, fields...)
+	SendAlarm(c, "warn", tag, msg)
 }
 
 // Panic log
@@ -145,6 +154,7 @@ func Panic(c context.Context, tag string, msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Panic(msg, fields...)
+	SendAlarm(c, "panic", tag, msg)
 }
 
 // Fatal log
@@ -152,4 +162,27 @@ func Fatal(c context.Context, tag string, msg string, args ...interface{}) {
 	msg = fmt.Sprintf(msg, args...)
 	fields := formatField(c, tag)
 	logzap.Fatal(msg, fields...)
+	SendAlarm(c, "fatal", tag, msg)
+}
+
+var alarmLevel = map[string][]string{
+	"debug": []string{"debug", "info", "warn", "error", "fatal", "panic"},
+	"info":  []string{"info", "warn", "error", "fatal", "panic"},
+	"warn":  []string{"warn", "error", "fatal", "panic"},
+	"error": []string{"error", "fatal", "panic"},
+	"fatal": []string{"fatal", "panic"},
+	"panic": []string{"panic"},
+}
+
+func SendAlarm(c context.Context, level string, tag string, msg string) {
+	canAlarm := false
+	for _, v := range alarmLevel[logcfg.AlarmLevel] {
+		if v == level {
+			canAlarm = true
+			break
+		}
+	}
+	if canAlarm {
+		alarm.SendBark(c, "[ONLINE]xplan serice alarm", fmt.Sprintf("tag: %s\nmsg: %s", tag, msg))
+	}
 }

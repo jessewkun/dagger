@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"strings"
 	"time"
 
 	"golang.org/x/exp/rand"
@@ -35,4 +36,19 @@ func RandomString(n int) string {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 	return string(b)
+}
+
+// RandomCode
+//
+// 返回指定长度的随机数字
+func RandomCode(n int) string {
+	const digits = "0123456789"
+	var sb strings.Builder
+	r := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
+
+	for i := 0; i < n; i++ {
+		sb.WriteByte(digits[r.Intn(len(digits))])
+	}
+
+	return sb.String()
 }

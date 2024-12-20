@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"crypto/hmac"
 	"crypto/md5"
+	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
 )
@@ -67,4 +69,18 @@ func (ac *AesCbc) pKCS7UnPadding(data []byte) []byte {
 	length := len(data)
 	unpadding := int(data[length-1])
 	return data[:(length - unpadding)]
+}
+
+func HMACSHA1(message, key string) []byte {
+	// 将密钥转换为字节数组
+	keyBytes := []byte(key)
+
+	// 创建 HMAC-SHA1 对象
+	hmacSHA1 := hmac.New(sha1.New, keyBytes)
+
+	// 写入消息
+	hmacSHA1.Write([]byte(message))
+
+	// 计算 HMAC，并将结果转换为十六进制字符串
+	return hmacSHA1.Sum(nil)
 }

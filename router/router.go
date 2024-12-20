@@ -2,6 +2,7 @@ package router
 
 import (
 	"dagger/app/demo"
+	"dagger/common"
 	"dagger/lib/middleware"
 	"dagger/lib/mysql"
 	"dagger/lib/redis"
@@ -16,8 +17,17 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 )
 
+// 允许的跨域来源
+var allowedOrigins = map[string]bool{
+	"http://localhost:8080": true, // 前端
+	"http://localhost:8001": true, // 后端
+	"http://127.0.0.1:8001": true, // 后端
+	"http://xiedehao.cn":    true,
+	"https://xiedehao.cn":   true,
+}
+
 func InitRouter(r *gin.Engine) *gin.Engine {
-	r.Use(middleware.DaggerRecovery(), middleware.Cros(), middleware.Trace(), middleware.IOLog())
+	r.Use(middleware.DaggerRecovery(), middleware.Cros(allowedOrigins), middleware.Trace(), middleware.IOLog())
 	r.NoMethod(HandleNotFound)
 	r.NoRoute(HandleNotFound)
 
@@ -53,10 +63,15 @@ func InitRouter(r *gin.Engine) *gin.Engine {
 	r.Static("/resources", "./")
 
 	// 用于访问前端页面静态文件，目录替换为前端打包后的静态文件目录
-	r.Static("/static", "./xplan-static/dist")
+	if common.IsRelease() {
+		// 生产环境使用 nginx 反向代理，静态资源由 nginx 提供
+		r.LoadHTMLFiles("/var/www/static/dist/index.html")
+	} else {
+		r.Static("/static", "./static/dist")
+		// 使用go代理前端页面时候的主页，目录替换为前端打包后的静态文件目录
+		r.LoadHTMLFiles(".static/dist/index.html")
+	}
 
-	// 使用go代理前端页面时候的主页，目录替换为前端打包后的静态文件目录
-	r.LoadHTMLFiles("./xplan-static/dist/index.html")
 	r.GET("/", func(c *gin.Context) {
 		c.HTML(200, "index.html", nil)
 	})

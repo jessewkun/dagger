@@ -12,6 +12,11 @@ port = ":8000"
     max_age = 7
     max_backup = 10
     transparent_parameter = ["trace_id", "span_id", "parent_span_id", "span_kind", "span_name", "span_status", "span_start_time", "span_end_time", "span_duration", "user_id"]
+    alarm_level = "error"
+
+[alarm]
+    bark_ids = []
+
 
 [http]
     transparent_parameter = ["trace_id"]

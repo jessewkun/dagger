@@ -1,8 +1,9 @@
 package middleware
 
 import (
+	"context"
+	"dagger/lib/constant"
 	"dagger/lib/logger"
-	"dagger/lib/sys"
 	"io"
 	"net/http"
 	"time"
@@ -21,8 +22,19 @@ func IOLog() gin.HandlerFunc {
 			bodyByte, _ = io.ReadAll(c.Request.Body)
 		}
 		var ctxResp any
-		ctxResp, _ = c.Get(sys.CTX_DAGGER_OUTPUT)
-		logger.InfoWithField(c.Request.Context(), TAGNAME, "IOLOG", map[string]interface{}{
+		ctxResp, _ = c.Get(constant.CTX_XPLAN_OUTPUT)
+
+		var fn func(c context.Context, tag string, msg string, field map[string]interface{})
+		fn = logger.InfoWithField
+
+		status := c.Writer.Status()
+		if status >= http.StatusInternalServerError {
+			fn = logger.ErrorWithField
+		} else if status >= http.StatusBadRequest {
+			fn = logger.WarnWithField
+		}
+
+		fn(c.Request.Context(), TAGNAME, "IOLOG", map[string]interface{}{
 			"duration":        time.Since(t),
 			"request_uri":     c.Request.RequestURI,
 			"method":          c.Request.Method,

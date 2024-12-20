@@ -1,6 +1,7 @@
 package sys
 
 import (
+	"dagger/lib/constant"
 	"errors"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,7 @@ func NewApiResult(c *gin.Context, code int, msg string, data interface{}) *ApiRe
 		Data:    data,
 		TraceId: c.GetString("trace_id"),
 	}
-	c.Set(CTX_DAGGER_OUTPUT, resp)
+	c.Set(constant.CTX_XPLAN_OUTPUT, resp)
 	return resp
 }
 

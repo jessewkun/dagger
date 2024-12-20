@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"dagger/common"
+	"dagger/lib/alarm"
 	"dagger/lib/logger"
 	"dagger/lib/mysql"
 	"dagger/lib/redis"
@@ -46,6 +47,7 @@ func init() {
 	logger.InitLogger(common.Cfg.Log)
 	mysql.InitMysql(common.Cfg.Mysql)
 	redis.InitRedis(common.Cfg.Redis)
+	alarm.InitBark(common.Cfg.Alarm)
 }
 
 func main() {

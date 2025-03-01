@@ -52,6 +52,9 @@ func GetWordContent(file string) (string, error) {
 // 	return wordFileBuffer, nil
 // }
 
+// Word2Markdown converts word to markdown
+//
+// 返回 markdown 内容
 func Word2Markdown(wordFilePath string) (string, error) {
 	cmd := exec.Command("pandoc", wordFilePath, "-f", "docx", "-t", "markdown")
 
@@ -63,6 +66,9 @@ func Word2Markdown(wordFilePath string) (string, error) {
 	return string(output), nil
 }
 
+// Markdown2Word converts markdown to word
+//
+// 返回 word 文件内容
 func Markdown2Word(markdownContent string) (bytes.Buffer, error) {
 	tempMdFile, err := ioutil.TempFile("", "temp*.md")
 	if err != nil {

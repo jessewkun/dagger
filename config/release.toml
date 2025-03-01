@@ -1,5 +1,6 @@
 mode = "release"
 port = ":8000"
+domain = "http://localhost:8000"
 
 [debug]
     module = [] # 可选值 mysql,http, + 自定义业务模块

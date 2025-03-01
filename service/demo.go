@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"dagger/app/dto"
+	"dagger/app/demo/dto"
 	"dagger/model/mysql"
 )
 

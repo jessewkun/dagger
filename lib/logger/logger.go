@@ -166,12 +166,12 @@ func Fatal(c context.Context, tag string, msg string, args ...interface{}) {
 }
 
 var alarmLevel = map[string][]string{
-	"debug": []string{"debug", "info", "warn", "error", "fatal", "panic"},
-	"info":  []string{"info", "warn", "error", "fatal", "panic"},
-	"warn":  []string{"warn", "error", "fatal", "panic"},
-	"error": []string{"error", "fatal", "panic"},
-	"fatal": []string{"fatal", "panic"},
-	"panic": []string{"panic"},
+	"debug": {"debug", "info", "warn", "error", "fatal", "panic"},
+	"info":  {"info", "warn", "error", "fatal", "panic"},
+	"warn":  {"warn", "error", "fatal", "panic"},
+	"error": {"error", "fatal", "panic"},
+	"fatal": {"fatal", "panic"},
+	"panic": {"panic"},
 }
 
 func SendAlarm(c context.Context, level string, tag string, msg string) {

@@ -10,7 +10,7 @@ import (
 	"unicode/utf8"
 )
 
-// IsOnlyChinese 判断字符串是否只包含中文
+// 判断字符串是否只包含中文
 func IsOnlyChinese(str string) bool {
 	if len(str) < 1 {
 		return false
@@ -24,7 +24,7 @@ func IsOnlyChinese(str string) bool {
 	return count == utf8.RuneCountInString(str)
 }
 
-// IsOnlyNumber 判断字符串是否只包含数字
+// 判断字符串是否只包含数字
 func IsOnlyNumber(str string) bool {
 	if _, err := strconv.Atoi(str); err == nil {
 		return true
@@ -32,7 +32,7 @@ func IsOnlyNumber(str string) bool {
 	return false
 }
 
-// IsZeroValue 判断是否是零值
+// 判断是否是零值
 func IsZeroValue(x interface{}) bool {
 	if x == nil {
 		return true
@@ -40,11 +40,17 @@ func IsZeroValue(x interface{}) bool {
 	return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
 }
 
-// IsChinesePhoneNumber 判断字符串是否是中国手机号码
+// 判断字符串是否是中国手机号码
 func IsChinesePhoneNumber(phone string) bool {
 	// 定义中国手机号码的正则表达式
 	re := regexp.MustCompile(`^1[3-9]\d{9}$`)
 	return re.MatchString(phone)
+}
+
+// 判断字符串是否是邮箱
+func IsEmail(email string) bool {
+	re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
+	return re.MatchString(email)
 }
 
 // 编码文件名

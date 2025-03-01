@@ -1,7 +1,7 @@
 package demo
 
 import (
-	"dagger/app/dto"
+	"dagger/app/demo/dto"
 	"dagger/lib/logger"
 	"dagger/lib/sys"
 	"dagger/model/redis"

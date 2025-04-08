@@ -109,11 +109,15 @@ func (s *userService) UpdateUserLastActiveTime(ctx context.Context, userId int) 
 // 解密token
 func (s *userService) DecodeToken(c *gin.Context) error {
 	userId := 0
-	if common.IsDebug() && c.Query("_debug") == "resource" {
+	if common.IsDebug() && c.Query("_debug") == "dagger" {
 		userId = 1
 	} else {
 		// 从 Authorization header 获取 token
 		// 获取从 cookie 获取，取决于项目的具体实现方式
+		// tokenStr, err := c.Request.Cookie("dagger_token")
+		// if err != nil || len(tokenStr.Value) == 0 {
+		// 	return errors.New("请重新登录")
+		// }
 		tokenStr := c.GetHeader("Authorization")
 		if tokenStr == "" {
 			return errors.New("请重新登录")
@@ -145,6 +149,39 @@ func (s *userService) DecodeToken(c *gin.Context) error {
 	ctx = context.WithValue(ctx, sys.CtxUserIDKey, userId)
 	c.Request = c.Request.WithContext(ctx)
 	return nil
+}
+
+// 解密token，不返回错误，用于不强制登录的场景
+func (s *userService) DecodeTokenWithNoError(c *gin.Context) {
+	userId := 0
+	if common.IsDebug() && c.Query("_debug") == "dagger" {
+		userId = 1
+	} else {
+		// 从 Authorization header 获取 token
+		// 获取从 cookie 获取，取决于项目的具体实现方式
+		// tokenStr, err := c.Request.Cookie("dagger_token")
+		// if err != nil || len(tokenStr.Value) == 0 {
+		// 	return errors.New("请重新登录")
+		// }
+		headertoken := c.GetHeader("Authorization")
+		// 如果 token 带有 Bearer 前缀，去掉前缀
+		if len(headertoken) > 7 && headertoken[:7] == "Bearer " {
+			if tokenStr, err := s.ac.Decode(headertoken[7:]); err == nil {
+				var token dto.Token
+				if err = json.Unmarshal([]byte(tokenStr), &token); err == nil {
+					if condition := token.Expire >= utils.TimeDifference(utils.Now(), token.LoginTime); condition {
+						userId = token.UserId
+					}
+				}
+			}
+		}
+	}
+	c.Set(sys.CtxUserIDKey, userId)
+	// 除了api接口层接受的是 gin.Context，其他地方都是 context.Context
+	// 为了方便后续其他地方处理，比如后续代码逻辑获取 user_id 或者日志默认打印 user_id（config log transparent_parameter 配置中如果有），这里同步把 user_id 放到 context.Context 中
+	ctx := c.Request.Context()
+	ctx = context.WithValue(ctx, sys.CtxUserIDKey, userId)
+	c.Request = c.Request.WithContext(ctx)
 }
 
 // 生成token

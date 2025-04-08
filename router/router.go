@@ -74,6 +74,7 @@ func registerSystemRoutes(r *gin.Engine) {
 // registerAPIRoutes 注册API路由
 func registerAPIRoutes(r *gin.Engine) {
 	var checkLoginFunc middleware.CheckLoginFunc = service.NewUserService().DecodeToken
+	// var needLoginFunc middleware.NeedLoginFunc = service.NewUserService().DecodeTokenWithNoError
 
 	// 用户相关路由
 	v1UserRouter := r.Group("/user/v1/")
@@ -115,7 +116,9 @@ func registerStaticRoutes(r *gin.Engine) {
 		c.HTML(200, "index.html", nil)
 	})
 
-	// 处理 vue router createWebHistory 模式的路由
+	// 解决 vue router createWebHistory 路由刷新问题，该模式路由不带 # 号，直接访问非 / 路由会返回 404
+	// 解决办法1 服务端配置，所有路由返回 index.html
+	// 解决办法2 vue 项目配置 createWebHashHistory，路由带 # 号
 	r.NoRoute(func(c *gin.Context) {
 		c.HTML(200, "index.html", nil)
 	})
